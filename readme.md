@@ -18,7 +18,7 @@
 
 Markdown 引用本地图片时，必须使用**相对路径**。相对路径的根目录位于:`./data/notebook`。
 
-例如，`notebook` 文件夹内有 `0.png`，那么 Markdown 引用方式为:
+例如，`notebook` 文件夹内有 `0.png`，那么 Markdown 引用方式为：
 
 ```
 ! [图片介绍] (0.png)
