@@ -16,17 +16,17 @@
 
 ## 使用
 
-Markdown 引用本地图片时，必须使用**相对路径**。相对路径的根目录位于：`./data/notebook`。
+- Markdown 引用本地图片时，必须使用**相对路径**。相对路径的根目录位于：`./data/notebook`。
 
-例如，`notebook` 文件夹内有 `0.png`，那么 Markdown 引用方式为：
+  - 例如，`notebook` 文件夹内有 `0.png`，那么 Markdown 引用方式为：
 
-```
-! [图片介绍] (0.png)
+```markdown
+![图片介绍](0.png)
 ```
 
 ## 示例
 
-```typescript
+```JavaScript
 // index.ts
 import {} from 'koishi-plugin-markdown-to-image-service'
 
@@ -35,12 +35,6 @@ export const inject = ['markdownToImage']
 export async function apply(ctx: Context) {
   const url = await ctx.markdownToImage.convertToImage('# Hello')
   return h.image(url)
-}
-```
-
-```json
-"dependencies": {
-  "koishi-plugin-markdown-to-image-service": "^0.0.1"
 }
 ```
 
