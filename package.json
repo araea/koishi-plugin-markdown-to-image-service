@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-markdown-to-image-service",
   "description": "提供 Markdown 转图片服务，支持完整的 Markdown 格式，包括 LaTeX 公式、Mermaid 流程图、代码高亮等。",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -16,6 +16,12 @@
     }
   },
   "license": "MIT",
+  "author": "Nawyjx <3373167460@qq.com>",
+  "homepage": "https://www.npmjs.com/package/koishi-plugin-markdown-to-image-service?activeTab=readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/araea/koishi-plugin-markdown-to-image-service.git"
+  },
   "keywords": [
     "chatbot",
     "koishi",

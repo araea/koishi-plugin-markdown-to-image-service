@@ -31,7 +31,6 @@ export async function apply(ctx: Context) {
 \`\`\`
 
 \`\`\`json
-// package.json
 "dependencies": {
   "koishi-plugin-markdown-to-image-service": "^0.0.1"
 }
