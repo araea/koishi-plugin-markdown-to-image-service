@@ -725,37 +725,36 @@ export const usage = `
 
 </style>
 
+<h2 id="-使用">🌈 使用 </h2>
+<p>当您在 Markdown 中引用本地图片时，务必使用<strong>相对路径</strong>。相对路径的根目录位于：<code>./data/notebook</code>。</p>
+<p>例如，在 <code>notebook</code> 文件夹内有名为 <code>0.png</code> 的图片，那么您需要使用一下方式在 Markdown 中引用该图片：</p>
+<pre data-role="codeBlock" data-info="markdown" class="language-markdown markdown"><code><span class="token url"><span class="token operator">!</span>[<span class="token content">图片介绍</span>](<span class="token url">0.png</span>)</span>
+</code></pre><h2 id="-指令">🌼 指令 </h2>
+<ul>
+<li><code>markdownToImage [markdownText]</code>：将 Markdown 文本转换为图片。</li>
+</ul>
+<h2 id="-服务">☕ 服务 </h2>
+<ul>
+<li><code>ctx.markdownToImage.convertToImage(markdownText: string): Promise&lt;Buffer&gt;</code></li>
+</ul>
+<h3 id="-示例">🌰 示例 </h3>
+<pre data-role="codeBlock" data-info="typescript" class="language-typescript typescript"><code><span class="token comment">// index.ts</span>
+<span class="token keyword keyword-import">import</span> <span class="token punctuation">{</span> Context <span class="token punctuation">}</span> <span class="token keyword keyword-from">from</span> <span class="token string">'koishi'</span>
+<span class="token keyword keyword-import">import</span> <span class="token punctuation">{</span> <span class="token punctuation">}</span> <span class="token keyword keyword-from">from</span> <span class="token string">'koishi-plugin-markdown-to-image-service'</span>
 
-## 🌈 使用
+<span class="token keyword keyword-export">export</span> <span class="token keyword keyword-const">const</span> inject <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token string">'markdownToImage'</span><span class="token punctuation">]</span>
 
-- 当您在 Markdown 中引用本地图片时，务必使用**相对路径**。
-
-- 相对路径的根目录位于：\`./data/notebook\`。
-
-    - 例如，在 \`notebook\` 文件夹内有名为 \`0.png\` 的图片，那么您需要使用一下方式在 Markdown 中引用该图片：\`![图片介绍](0.png)\`
-
-## 🌼 指令
-
-- \`markdownToImage [markdownText]\`：将 Markdown 文本转换为图片。
-
-## ☕ 服务
-
-- \`ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>\`
-
-### 🌰 示例
-
-\`\`\`typescript
-// index.ts
-import { Context } from 'koishi'
-import { } from 'koishi-plugin-markdown-to-image-service'
-
-export const inject = ['markdownToImage']
-
-export async function apply(ctx: Context) {
-  const imageBuffer = await ctx.markdownToImage.convertToImage('# Hello')
-  return h.image(imageBuffer, 'image/png') // 'image/png', 'image/jpeg'
-}
-\`\`\`
+<span class="token keyword keyword-export">export</span> <span class="token keyword keyword-async">async</span> <span class="token keyword keyword-function">function</span> <span class="token function">apply</span><span class="token punctuation">(</span>ctx<span class="token operator">:</span> Context<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+  <span class="token keyword keyword-const">const</span> imageBuffer <span class="token operator">=</span> <span class="token keyword keyword-await">await</span> ctx<span class="token punctuation">.</span>markdownToImage<span class="token punctuation">.</span><span class="token function">convertToImage</span><span class="token punctuation">(</span><span class="token string">'# Hello'</span><span class="token punctuation">)</span>
+  <span class="token keyword keyword-return">return</span> h<span class="token punctuation">.</span><span class="token function">image</span><span class="token punctuation">(</span>imageBuffer<span class="token punctuation">,</span> <span class="token string">'image/png'</span><span class="token punctuation">)</span> <span class="token comment">// 'image/png', 'image/jpeg'</span>
+<span class="token punctuation">}</span>
+</code></pre><h2 id="-致谢">🍧 致谢 </h2>
+<ul>
+<li><a href="https://koishi.chat/">Koishi</a> - 提供机器人框架支持</li>
+<li><a href="https://github.com/shd101wyy/crossnote">crossnote</a> - 提供 Markdown 渲染引擎支持</li>
+</ul>
+<h2 id="-license">✨ License </h2>
+<p>MIT © 2023</p>
 `
 
 export interface Config {
