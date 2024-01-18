@@ -5,9 +5,6 @@ import path from "node:path";
 import {promisify} from 'util';
 import {Notebook} from "crossnote"
 import find from 'puppeteer-finder';
-import {languages} from "crossnote/out/types/src/prism/prism";
-import awk = languages.awk;
-
 export const name = 'markdown-to-image-service'
 export const usage = `
 <style>
