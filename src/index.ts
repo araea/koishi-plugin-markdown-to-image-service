@@ -467,11 +467,6 @@ export const usage = `
             border-radius: 3px
         }
 
-        @media print {
-            html body {
-                background-color: #fff
-            }
-
             html body h1, html body h2, html body h3, html body h4, html body h5, html body h6 {
                 color: #000;
                 page-break-after: avoid
@@ -748,13 +743,6 @@ export const usage = `
   <span class="token keyword keyword-const">const</span> imageBuffer <span class="token operator">=</span> <span class="token keyword keyword-await">await</span> ctx<span class="token punctuation">.</span>markdownToImage<span class="token punctuation">.</span><span class="token function">convertToImage</span><span class="token punctuation">(</span><span class="token string">'# Hello'</span><span class="token punctuation">)</span>
   <span class="token keyword keyword-return">return</span> h<span class="token punctuation">.</span><span class="token function">image</span><span class="token punctuation">(</span>imageBuffer<span class="token punctuation">,</span> <span class="token string">'image/png'</span><span class="token punctuation">)</span> <span class="token comment">// 'image/png', 'image/jpeg'</span>
 <span class="token punctuation">}</span>
-</code></pre><h2 id="-致谢">🍧 致谢 </h2>
-<ul>
-<li><a href="https://koishi.chat/">Koishi</a> - 提供机器人框架支持</li>
-<li><a href="https://github.com/shd101wyy/crossnote">crossnote</a> - 提供 Markdown 渲染引擎支持</li>
-</ul>
-<h2 id="-license">✨ License </h2>
-<p>MIT © 2023</p>
 `
 
 export interface Config {
