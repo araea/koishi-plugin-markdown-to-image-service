@@ -10,7 +10,7 @@ import awk = languages.awk;
 
 export const name = 'markdown-to-image-service'
 export const usage = `
-## 🌈 使用 🌈
+## 🌈 使用
 
 当您在 Markdown 中引用本地图片时，务必使用**相对路径**。相对路径的根目录位于：\`./data/notebook\`。
 
@@ -20,15 +20,15 @@ export const usage = `
 ![图片介绍](0.png)
 \`\`\`
 
-## 🌼 指令 🌼
+## 🌼 指令
 
 - \`markdownToImage [markdownText]\`：将 Markdown 文本转换为图片。
 
-## ☕ 服务 ☕
+## ☕ 服务
 
 - \`ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>\`
 
-### 🌰 示例 🌰
+### 🌰 示例
 
 \`\`\`typescript
 // index.ts
