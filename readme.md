@@ -22,12 +22,16 @@ koishi-plugin-markdown-to-image-service 是一个基于 [Koishi](https://koishi.
 ![图片介绍](0.png)
 ```
 
-## 示例
+## 指令
+
+- `markdownToImage [markdownText]`：将 Markdown 文本转换为图片。
+
+## 服务使用示例
 
 ```typescript
 // index.ts
 import { Context } from 'koishi'
-import { MarkdownToImage } from 'koishi-plugin-markdown-to-image-service'
+import { } from 'koishi-plugin-markdown-to-image-service'
 
 export const inject = ['markdownToImage']
 

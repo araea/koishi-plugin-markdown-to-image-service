@@ -1,27 +1,34 @@
-import {Context, Schema, Service} from 'koishi'
+import {Context, h, Schema, Service} from 'koishi'
 
 import * as fs from "fs";
 import path from "node:path";
 import {promisify} from 'util';
 import {Notebook} from "crossnote"
 import find from 'puppeteer-finder';
+import {languages} from "crossnote/out/types/src/prism/prism";
+import awk = languages.awk;
 
 export const name = 'markdown-to-image-service'
 export const usage = `## 使用
 
-- Markdown 引用本地图片时，必须使用**相对路径**。相对路径的根目录位于：\`./data/notebook\`。
+当您在 Markdown 中引用本地图片时，务必使用**相对路径**。相对路径的根目录位于：\`./data/notebook\`。
 
-  - 例如，\`notebook\` 文件夹内有 \`0.png\`，那么 Markdown 引用方式为：
+例如，如果在 \`notebook\` 文件夹内有名为 \`0.png\` 的图片，那么您需要使用以下方式来在 Markdown 中引用该图片：
 
 \`\`\`markdown
 ![图片介绍](0.png)
 \`\`\`
 
-## 示例
+## 指令
 
-\`\`\`JavaScript
+- \`markdownToImage [markdownText]\`：将 Markdown 文本转换为图片。
+
+## 服务使用示例
+
+\`\`\`typescript
 // index.ts
-import {} from 'koishi-plugin-markdown-to-image-service'
+import { Context } from 'koishi'
+import { } from 'koishi-plugin-markdown-to-image-service'
 
 export const inject = ['markdownToImage']
 
@@ -321,4 +328,17 @@ class MarkdownToImageService extends Service {
 
 export function apply(ctx: Context, config: Config) {
   ctx.plugin(MarkdownToImageService, config)
+
+  ctx.command('markdownToImage [markdownText:text]','将 Markdown 文本转换为图片')
+    .action(async ({session}, markdownText) => {
+      if (!markdownText) {
+        await session.send('请输入你要转换的 Markdown 文本内容：')
+        const userInput = await session.prompt()
+        if (!userInput) return `输入超时。`
+        markdownText = userInput
+      }
+      const markdownToImage = new MarkdownToImageService(ctx, config)
+      const imageBuffer = await markdownToImage.convertToImage(markdownText)
+      return h.image(imageBuffer, `image/${config.defaultImageFormat}`)
+    })
 }
