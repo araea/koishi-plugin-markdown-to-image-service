@@ -1,7 +1,8 @@
-import {Context, h, Schema, Service} from 'koishi'
+import {Context, Schema, Service} from 'koishi'
 
 import * as fs from "fs";
 import path from "node:path";
+import {promisify} from 'util';
 import {Notebook} from "crossnote"
 import find from 'puppeteer-finder';
 
@@ -25,13 +26,14 @@ import {} from 'koishi-plugin-markdown-to-image-service'
 export const inject = ['markdownToImage']
 
 export async function apply(ctx: Context) {
-  const url = await ctx.markdownToImage.convertToImage('# Hello')
-  return h.image(url)
+  const imageBuffer = await ctx.markdownToImage.convertToImage('# Hello')
+  return h.image(imageBuffer, 'image/png')
 }
 \`\`\`
 `
 
 export interface Config {
+  enableAutoCacheClear: boolean
   enableRunAllCodeChunks: boolean;
   defaultImageFormat: string;
 
@@ -69,9 +71,10 @@ export interface Config {
   protocolsWhiteList: string;
 }
 
-export const Config: Schema<Config> =Schema.intersect([
+export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
-    enableRunAllCodeChunks: Schema.boolean().default(false).description('文本转图片时是否执行代码块里的代码。⚠ ️ 请谨慎使用此功能，因为它可能会使您的安全受到威胁！如果在启用脚本执行的情况下，有人让您打开带有恶意代码的 markdown，您的计算机可能会被黑客攻击。'),
+    enableAutoCacheClear: Schema.boolean().default(true).description('是否启动自动删除缓存功能。'),
+    enableRunAllCodeChunks: Schema.boolean().default(false).description('文本转图片时是否执行代码块里的代码。'),
     defaultImageFormat: Schema.union(['png', 'jpeg']).default('png').description('文本转图片时默认渲染的图片格式。'),
   }).description('基础设置'),
   Schema.object({
@@ -183,22 +186,25 @@ class MarkdownToImageService extends Service {
     super(ctx, 'markdownToImage', true);
   }
 
-  async convertToImage(markdownText: string): Promise<string> {
+  async convertToImage(markdownText: string): Promise<Buffer> {
+    const logger = this.ctx.logger('markdownToImage')
     const notebookDirPath = path.join(this.ctx.baseDir, 'data', 'notebook');
-    const readmeFilePath = path.join(notebookDirPath, 'README.md');
+
     async function ensureDirExists(dirPath: string) {
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, {recursive: true});
       }
     }
+
     async function ensureFileExists(filePath: string) {
       if (!fs.existsSync(filePath)) {
         fs.writeFileSync(filePath, '', 'utf-8');
       }
     }
+
     await ensureDirExists(notebookDirPath)
-    await ensureFileExists(readmeFilePath);
     let {
+      enableAutoCacheClear,
       enableRunAllCodeChunks,
       defaultImageFormat,
       enableOffline,
@@ -264,18 +270,51 @@ class MarkdownToImageService extends Service {
         puppeteerArgs,
       },
     });
-    const engine = notebook.getNoteMarkdownEngine(readmeFilePath);
-    if (!markdownText)  throw new Error(`请输入文本内容。`);
 
-    await fs.promises.writeFile(readmeFilePath, markdownText);
-    await engine.chromeExport({fileType: defaultImageFormat, runAllCodeChunks: enableRunAllCodeChunks});
-    const readmeImagePath = path.join(notebookDirPath, `README.${defaultImageFormat}`);
-    if (fs.existsSync(readmeImagePath)) {
-      return readmeImagePath
-    } else {
-      throw new Error('未找到渲染结果，请重试。');
+
+    const asyncUnlink = promisify(fs.unlink);
+
+    function getCurrentTimeNumberString(): string {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const seconds = now.getSeconds().toString().padStart(2, '0');
+      return `${year}${month}${day}${hours}${minutes}${seconds}`;
     }
+
+    async function generateAndSaveImage(notebookDirPath: string, markdownText: string, defaultImageFormat: string, enableRunAllCodeChunks: boolean): Promise<Buffer> {
+      const currentTimeString = getCurrentTimeNumberString();
+      const readmeFilePath = path.join(notebookDirPath, `${currentTimeString}.md`);
+      await fs.promises.writeFile(readmeFilePath, markdownText);
+
+      const engine = notebook.getNoteMarkdownEngine(readmeFilePath);
+      await engine.chromeExport({fileType: defaultImageFormat, runAllCodeChunks: enableRunAllCodeChunks});
+
+      const readmeImagePath = path.join(notebookDirPath, `${currentTimeString}.${defaultImageFormat}`);
+      const imageBuffer = fs.readFileSync(readmeImagePath);
+
+      if (enableAutoCacheClear) {
+        await asyncUnlink(readmeImagePath);
+        await asyncUnlink(readmeFilePath);
+      }
+
+      return imageBuffer;
+    }
+
+    try {
+      // 处理 imageBuffer
+      return await generateAndSaveImage(notebookDirPath, markdownText, defaultImageFormat, enableRunAllCodeChunks)
+    } catch (error) {
+      logger.error('出错：', error);
+    }
+
+
   }
+
+  //
 }
 
 // export default MarkdownToImageService;

@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-markdown-to-image-service",
-  "description": "提供 Markdown 转图片服务，支持完整的 Markdown 格式，包括 LaTeX 公式、Mermaid 流程图、代码高亮等。",
-  "version": "0.0.5",
+  "description": "提供将 Markdown 文本转换为图片的服务，支持完整的 Markdown 格式，包括 LaTeX 公式、Mermaid 流程图、代码高亮等。",
+  "version": "0.0.6",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
