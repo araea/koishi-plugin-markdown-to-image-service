@@ -5,6 +5,7 @@ import path from "node:path";
 import {promisify} from 'util';
 import {Notebook} from "crossnote"
 import find from 'puppeteer-finder';
+
 export const name = 'markdown-to-image-service'
 export const usage = `
 <style>
@@ -992,12 +993,14 @@ class MarkdownToImageService extends Service {
       const hours = now.getHours().toString().padStart(2, '0');
       const minutes = now.getMinutes().toString().padStart(2, '0');
       const seconds = now.getSeconds().toString().padStart(2, '0');
-      return `${year}${month}${day}${hours}${minutes}${seconds}`;
+      const randomString = Math.random().toString(36).substring(2, 8); // 生成一个随机字符串
+      return `${year}${month}${day}${hours}${minutes}${seconds}-${randomString}`;
     }
 
     async function generateAndSaveImage(notebookDirPath: string, markdownText: string, defaultImageFormat: string, enableRunAllCodeChunks: boolean): Promise<Buffer> {
       const currentTimeString = getCurrentTimeNumberString();
       const readmeFilePath = path.join(notebookDirPath, `${currentTimeString}.md`);
+      // await ensureFileExists(readmeFilePath)
       await fs.promises.writeFile(readmeFilePath, markdownText);
 
       const engine = notebook.getNoteMarkdownEngine(readmeFilePath);
@@ -1032,7 +1035,7 @@ class MarkdownToImageService extends Service {
 export function apply(ctx: Context, config: Config) {
   ctx.plugin(MarkdownToImageService, config)
 
-  ctx.command('markdownToImage [markdownText:text]','将 Markdown 文本转换为图片')
+  ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
     .action(async ({session}, markdownText) => {
       if (!markdownText) {
         await session.send('请输入你要转换的 Markdown 文本内容：')
