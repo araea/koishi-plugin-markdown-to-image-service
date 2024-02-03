@@ -205,8 +205,9 @@ declare module 'koishi' {
 }
 
 class MarkdownToImageService extends Service {
+
   constructor(ctx: Context, private config: Config) {
-    super(ctx, 'markdownToImage', true);
+    super(ctx, 'markdownToImage');
   }
 
   async convertToImage(markdownText: string): Promise<Buffer> {
