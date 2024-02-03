@@ -46,6 +46,11 @@ export async function apply(ctx: Context) {
 `
 
 export interface Config {
+  width: number
+  height: number
+  deviceScaleFactor: number
+  waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
+
   enableAutoCacheClear: boolean
   enableRunAllCodeChunks: boolean;
   defaultImageFormat: "png" | "jpeg" | "webp";
@@ -86,9 +91,14 @@ export interface Config {
 
 export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
+    width: Schema.number().default(800).description(`视图宽度。`),
+    height: Schema.number().default(100).description(`视图高度。`),
+    deviceScaleFactor: Schema.number().default(1).description(`设备的缩放比率。`),
     enableAutoCacheClear: Schema.boolean().default(true).description('是否启动自动删除缓存功能。'),
     enableRunAllCodeChunks: Schema.boolean().default(false).description('文本转图片时是否执行代码块里的代码。'),
     defaultImageFormat: Schema.union(['png', 'jpeg', 'webp']).default('png').description('文本转图片时默认渲染的图片格式。'),
+    // waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
+    waitUntil: Schema.union(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).default('networkidle0').description('指定页面何时认为导航完成。'),
   }).description('基础设置'),
   Schema.object({
     mermaidTheme: Schema.union(['default', 'dark', 'forest']).default('default').description('Mermaid 主题。'),
@@ -218,6 +228,10 @@ class MarkdownToImageService extends Service {
 
     await ensureDirExists(notebookDirPath)
     let {
+      height,
+      width,
+      deviceScaleFactor,
+      waitUntil,
       enableAutoCacheClear,
       enableRunAllCodeChunks,
       defaultImageFormat,
@@ -309,11 +323,12 @@ class MarkdownToImageService extends Service {
       await engine.htmlExport({offline: enableOffline, runAllCodeChunks: enableRunAllCodeChunks});
 
       const readmeHtmlPath = path.join(notebookDirPath, `${currentTimeString}.html`);
-      await page.goto('file://' + readmeHtmlPath.replace(/\\/g, '/'), {waitUntil: 'networkidle0'});
-      // const imageBuffer = await page.screenshot({fullPage: true, type: defaultImageFormat})
-      const pElement = await page.$('.crossnote.markdown-preview');
-      const imageBuffer = await pElement.screenshot({type: defaultImageFormat});
-      await page.close()
+      await page.setViewport({width: width, height: height, deviceScaleFactor: deviceScaleFactor})
+      await page.goto('file://' + readmeHtmlPath.replace(/\\/g, '/'), {waitUntil: waitUntil});
+      const imageBuffer = await page.screenshot({fullPage: true, type: defaultImageFormat})
+      // const pElement = await page.$('.crossnote.markdown-preview');
+      // const imageBuffer = await pElement.screenshot({type: defaultImageFormat});
+      // await page.close()
 
       if (enableAutoCacheClear) {
         await asyncUnlink(readmeHtmlPath);
