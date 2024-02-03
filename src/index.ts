@@ -328,7 +328,7 @@ class MarkdownToImageService extends Service {
       const imageBuffer = await page.screenshot({fullPage: true, type: defaultImageFormat})
       // const pElement = await page.$('.crossnote.markdown-preview');
       // const imageBuffer = await pElement.screenshot({type: defaultImageFormat});
-      // await page.close()
+      await page.close()
 
       if (enableAutoCacheClear) {
         await asyncUnlink(readmeHtmlPath);
