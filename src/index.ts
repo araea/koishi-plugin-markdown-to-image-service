@@ -207,7 +207,7 @@ declare module 'koishi' {
 class MarkdownToImageService extends Service {
 
   constructor(ctx: Context, private config: Config) {
-    super(ctx, 'markdownToImage');
+    super(ctx, 'markdownToImage', true);
   }
 
   async convertToImage(markdownText: string): Promise<Buffer> {
@@ -355,7 +355,7 @@ class MarkdownToImageService extends Service {
 // export default MarkdownToImageService;
 
 export function apply(ctx: Context, config: Config) {
-  ctx.plugin(MarkdownToImageService, this)
+  ctx.plugin(MarkdownToImageService, config)
 
   ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
     .action(async ({session}, markdownText) => {
