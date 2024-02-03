@@ -16,7 +16,7 @@ koishi-plugin-markdown-to-image-service 是一款基于 [Koishi](https://koishi.
 
 当您在 Markdown 中引用本地图片时，务必使用**相对路径**。相对路径的根目录位于：`./data/notebook`。
 
-例如，在 `notebook` 文件夹内有名为 `0.png` 的图片，那么您需要使用一下方式在 Markdown 中引用该图片：
+例如，在 `notebook` 文件夹内有名为 `0.png` 的图片，那么您需要使用以下方式在 Markdown 中引用该图片：
 
 ```markdown
 ![图片介绍](0.png)
