@@ -309,7 +309,7 @@ class MarkdownToImageService extends Service {
       await engine.htmlExport({offline: enableOffline, runAllCodeChunks: enableRunAllCodeChunks});
 
       const readmeHtmlPath = path.join(notebookDirPath, `${currentTimeString}.html`);
-      await page.goto('file://' + readmeHtmlPath.replace(/\\/g, '/'), {waitUntil: 'load'});
+      await page.goto('file://' + readmeHtmlPath.replace(/\\/g, '/'), {waitUntil: 'networkidle0'});
       // const imageBuffer = await page.screenshot({fullPage: true, type: defaultImageFormat})
       const pElement = await page.$('.crossnote.markdown-preview');
       const imageBuffer = await pElement.screenshot({type: defaultImageFormat});
