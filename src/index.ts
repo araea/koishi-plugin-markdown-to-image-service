@@ -363,7 +363,6 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
     .action(async ({session}, markdownText) => {
-      console.log('6')
       if (!markdownText) {
         await session.send('请输入你要转换的 Markdown 文本内容：')
         const userInput = await session.prompt()
