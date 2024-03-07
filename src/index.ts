@@ -206,12 +206,16 @@ declare module 'koishi' {
 
 class MarkdownToImageService extends Service {
 
-  constructor(ctx: Context, private config: Config) {
+  constructor(ctx: Context, config: Config) {
     super(ctx, 'markdownToImage', true);
+    this.config = config
   }
 
   async convertToImage(markdownText: string): Promise<Buffer> {
-    const page = await this.ctx.puppeteer.page()
+    // const page = await this.ctx.puppeteer.page()
+    const browser = this.ctx.puppeteer.browser
+    const context = await browser.createBrowserContext()
+    const page = await context.newPage()
     const logger = this.ctx.logger('markdownToImage')
     const notebookDirPath = path.join(this.ctx.baseDir, 'data', 'notebook');
 
@@ -359,6 +363,7 @@ export function apply(ctx: Context, config: Config) {
 
   ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
     .action(async ({session}, markdownText) => {
+      console.log('6')
       if (!markdownText) {
         await session.send('请输入你要转换的 Markdown 文本内容：')
         const userInput = await session.prompt()
