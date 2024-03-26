@@ -98,7 +98,7 @@ export const Config: Schema<Config> = Schema.intersect([
     enableRunAllCodeChunks: Schema.boolean().default(false).description('文本转图片时是否执行代码块里的代码。'),
     defaultImageFormat: Schema.union(['png', 'jpeg', 'webp']).default('png').description('文本转图片时默认渲染的图片格式。'),
     // waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
-    waitUntil: Schema.union(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).default('networkidle0').description('指定页面何时认为导航完成。'),
+    waitUntil: Schema.union(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).default('networkidle0').description('指定页面何时认为导航完成。使用 load 返回图片的速度会显著增加，但对于某些主题可能会未加载完全。'),
   }).description('基础设置'),
   Schema.object({
     mermaidTheme: Schema.union(['default', 'dark', 'forest']).default('default').description('Mermaid 主题。'),

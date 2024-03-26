@@ -52,4 +52,4 @@ export async function apply(ctx: Context) {
 
 ## ✨ License
 
-MIT © 2023
+MIT © 2024
