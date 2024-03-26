@@ -96,9 +96,9 @@ export const Config: Schema<Config> = Schema.intersect([
     deviceScaleFactor: Schema.number().default(1).description(`设备的缩放比率。`),
     enableAutoCacheClear: Schema.boolean().default(true).description('是否启动自动删除缓存功能。'),
     enableRunAllCodeChunks: Schema.boolean().default(false).description('文本转图片时是否执行代码块里的代码。'),
-    defaultImageFormat: Schema.union(['png', 'jpeg', 'webp']).default('png').description('文本转图片时默认渲染的图片格式。'),
+    defaultImageFormat: Schema.union(['png', 'jpeg', 'webp']).default('jpeg').description('文本转图片时默认渲染的图片格式。'),
     // waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
-    waitUntil: Schema.union(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).default('networkidle0').description('指定页面何时认为导航完成。使用 load 返回图片的速度会显著增加，但对于某些主题可能会未加载完全。'),
+    waitUntil: Schema.union(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).default('load').description('指定页面何时认为导航完成。使用 load 返回图片的速度会显著增加，但对于某些主题可能会未加载完全，如果出现白屏情况，请使用 networkidle0。'),
   }).description('基础设置'),
   Schema.object({
     mermaidTheme: Schema.union(['default', 'dark', 'forest']).default('default').description('Mermaid 主题。'),
