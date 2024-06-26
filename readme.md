@@ -50,6 +50,14 @@ export async function apply(ctx: Context) {
 - [Koishi](https://koishi.chat/) - 提供机器人框架支持
 - [crossnote](https://github.com/shd101wyy/crossnote) - 提供 Markdown 渲染引擎支持
 
+## 🐱 QQ 群
+
+- 956758505
+
 ## ✨ License
 
-MIT © 2024
+MIT License © 2024
+
+希望您喜欢这款插件！ 💫
+
+如有任何问题或建议，欢迎联系我哈~ 🎈

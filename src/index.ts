@@ -43,6 +43,10 @@ export async function apply(ctx: Context) {
   return h.image(imageBuffer, 'image/png') // 'image/png', 'image/jpeg'
 }
 \`\`\`
+
+## 🐱 QQ 群
+
+- 956758505
 `
 
 export interface Config {
@@ -213,7 +217,10 @@ class MarkdownToImageService extends Service {
 
   async convertToImage(markdownText: string): Promise<Buffer> {
     // const page = await this.ctx.puppeteer.page()
-    const browser = this.ctx.puppeteer.browser
+    let browser;
+    this.ctx.inject(['puppeteer'], async (ctx) => {
+      browser = ctx.puppeteer.browser;
+    });
     const context = await browser.createBrowserContext()
     const page = await context.newPage()
     const logger = this.ctx.logger('markdownToImage')
