@@ -209,21 +209,29 @@ declare module 'koishi' {
 }
 
 class MarkdownToImageService extends Service {
+  private config: Config;
+  private browser = null;
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'markdownToImage', true);
-    this.config = config
+    this.config = config;
+  }
+
+  private async initBrowser(): Promise<void> {
+    await this.ctx.inject(['puppeteer'], (ctx) => {
+      this.browser = ctx.puppeteer.browser;
+    });
   }
 
   async convertToImage(markdownText: string): Promise<Buffer> {
-    // const page = await this.ctx.puppeteer.page()
-    let browser;
-    this.ctx.inject(['puppeteer'], async (ctx) => {
-      browser = ctx.puppeteer.browser;
-    });
-    const context = await browser.createBrowserContext()
-    const page = await context.newPage()
-    const logger = this.ctx.logger('markdownToImage')
+    if (!this.browser) {
+      await this.initBrowser();
+    }
+
+    let context = null;
+    context = await this.browser!.createBrowserContext();
+    const page = await context.newPage();
+    const logger = this.ctx.logger('markdownToImage');
     const notebookDirPath = path.join(this.ctx.baseDir, 'data', 'notebook');
 
     async function ensureDirExists(dirPath: string) {
@@ -366,19 +374,22 @@ class MarkdownToImageService extends Service {
 
 // export default MarkdownToImageService;
 
-export function apply(ctx: Context, config: Config) {
-  ctx.plugin(MarkdownToImageService, config)
+export async function apply(ctx: Context, config: Config) {
+  await ctx.inject(['puppeteer'], (ctx) => {
+    ctx.plugin(MarkdownToImageService, config)
 
-  ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
-    .action(async ({session}, markdownText) => {
-      if (!markdownText) {
-        await session.send('请输入你要转换的 Markdown 文本内容：')
-        const userInput = await session.prompt()
-        if (!userInput) return `输入超时。`
-        markdownText = userInput
-      }
-      const markdownToImage = new MarkdownToImageService(ctx, config)
-      const imageBuffer = await markdownToImage.convertToImage(markdownText)
-      return h.image(imageBuffer, `image/${config.defaultImageFormat}`)
-    })
+    ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
+      .action(async ({session}, markdownText) => {
+        if (!markdownText) {
+          await session.send('请输入你要转换的 Markdown 文本内容：')
+          const userInput = await session.prompt()
+          if (!userInput) return `输入超时。`
+          markdownText = userInput
+        }
+        const markdownToImage = new MarkdownToImageService(ctx, config)
+        const imageBuffer = await markdownToImage.convertToImage(markdownText)
+        return h.image(imageBuffer, `image/${config.defaultImageFormat}`)
+      })
+  });
+
 }
