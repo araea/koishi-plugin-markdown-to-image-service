@@ -33,14 +33,20 @@ export const usage = `## 🌈 使用
 
 \`\`\`typescript
 // index.ts
-import { Context } from 'koishi'
-import { } from 'koishi-plugin-markdown-to-image-service'
+import {Context, h} from 'koishi'
+import {} from 'koishi-plugin-markdown-to-image-service'
 
-export const inject = ['markdownToImage']
+export const inject = {
+  required: ['markdownToImage'],
+}
 
 export async function apply(ctx: Context) {
-  const imageBuffer = await ctx.markdownToImage.convertToImage('# Hello')
-  return h.image(imageBuffer, 'image/png') // 'image/png', 'image/jpeg'
+  ctx.command('test', '测试')
+    .action(async ({session}) => {
+      const imageBuffer = await ctx.markdownToImage.convertToImage('# Hello')
+      return h.image(imageBuffer, 'image/png') // 'image/png' | 'image/jpeg'
+    });
+
 }
 \`\`\`
 
@@ -101,7 +107,6 @@ export const Config: Schema<Config> = Schema.intersect([
     enableAutoCacheClear: Schema.boolean().default(true).description('是否启动自动删除缓存功能。'),
     enableRunAllCodeChunks: Schema.boolean().default(false).description('文本转图片时是否执行代码块里的代码。'),
     defaultImageFormat: Schema.union(['png', 'jpeg', 'webp']).default('jpeg').description('文本转图片时默认渲染的图片格式。'),
-    // waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
     waitUntil: Schema.union(['load', 'domcontentloaded', 'networkidle0', 'networkidle2']).default('load').description('指定页面何时认为导航完成。使用 load 返回图片的速度会显著增加，但对于某些主题可能会未加载完全，如果出现白屏情况，请使用 networkidle0。'),
   }).description('基础设置'),
   Schema.object({

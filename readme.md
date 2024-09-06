@@ -34,14 +34,20 @@ koishi-plugin-markdown-to-image-service 是一款基于 [Koishi](https://koishi.
 
 ```typescript
 // index.ts
-import { Context } from 'koishi'
-import { } from 'koishi-plugin-markdown-to-image-service'
+import {Context, h} from 'koishi'
+import {} from 'koishi-plugin-markdown-to-image-service'
 
-export const inject = ['markdownToImage']
+export const inject = {
+  required: ['markdownToImage'],
+}
 
 export async function apply(ctx: Context) {
-  const imageBuffer = await ctx.markdownToImage.convertToImage('# Hello')
-  return h.image(imageBuffer, 'image/png') // 'image/png', 'image/jpeg'
+  ctx.command('test', '测试')
+    .action(async ({session}) => {
+      const imageBuffer = await ctx.markdownToImage.convertToImage('# Hello')
+      return h.image(imageBuffer, 'image/png') // 'image/png' | 'image/jpeg'
+    });
+
 }
 ```
 
