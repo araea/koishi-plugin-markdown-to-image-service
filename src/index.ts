@@ -192,7 +192,7 @@ export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
     enableOffline: Schema.boolean().default(false).description('是否离线使用 html。'),
     printBackground: Schema.boolean().default(true).description('是否为文件导出打印背景。如果设置为 `false`，则将使用 `github-light` 预览主题。您还可以为单个文件设置 `print_background`。'),
-    chromePath: Schema.path().default('').description('Chrome / Edge 可执行文件路径，用于 Puppeteer 导出。留空表示路径将自动找到。'),
+    chromePath: Schema.string().default('').description('Chrome / Edge 可执行文件路径，用于 Puppeteer 导出。留空表示路径将自动找到。'),
     puppeteerArgs: Schema.array(String).default([]).description('传递给 puppeteer.launch({args: $puppeteerArgs}) 的参数，例如 `[\'--no-sandbox\', \'--disable-setuid-sandbox\']`。'),
   }).description('导出与渲染设置'),
   Schema.object({
@@ -208,6 +208,7 @@ declare module 'koishi' {
   }
 }
 
+// @ts-ignore
 class MarkdownToImageService extends Service {
   private config: Config;
   private browser = null;
@@ -284,8 +285,7 @@ class MarkdownToImageService extends Service {
       HTML5EmbedVideoAttributes,
       puppeteerArgs,
     } = this.config;
-    const executablePath = await find();
-    if (!chromePath) chromePath = executablePath
+    if (!chromePath) chromePath = await find()
     const notebook = await Notebook.init({
       notebookPath: notebookDirPath,
       config: {
