@@ -210,53 +210,27 @@ declare module 'koishi' {
 
 // @ts-ignore
 class MarkdownToImageService extends Service {
-  private config: Config;
-  private browser = null;
+  private readonly config: Config;
+  private browser: any = null;
+  private loggerForService: any;
+  private readonly notebookDirPath: string;
+  private notebook: any;
 
   constructor(ctx: Context, config: Config) {
     super(ctx, 'markdownToImage', true);
     this.config = config;
+    this.loggerForService = ctx.logger('markdownToImage');
+    this.notebookDirPath = path.join(ctx.baseDir, 'data', 'notebook');
   }
 
   private async initBrowser(): Promise<void> {
-    await this.ctx.inject(['puppeteer'], (ctx) => {
+    this.ctx.inject(['puppeteer'], (ctx) => {
       this.browser = ctx.puppeteer.browser;
     });
   }
 
-  async convertToImage(markdownText: string): Promise<Buffer> {
-    if (!this.browser) {
-      await this.initBrowser();
-    }
-
-    let context = null;
-    context = await this.browser!.createBrowserContext();
-    const page = await context.newPage();
-    const logger = this.ctx.logger('markdownToImage');
-    const notebookDirPath = path.join(this.ctx.baseDir, 'data', 'notebook');
-
-    async function ensureDirExists(dirPath: string) {
-      if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, {recursive: true});
-      }
-    }
-
-    async function ensureFileExists(filePath: string) {
-      if (!fs.existsSync(filePath)) {
-        fs.writeFileSync(filePath, '', 'utf-8');
-      }
-    }
-
-    await ensureDirExists(notebookDirPath)
-    let {
-      height,
-      width,
-      deviceScaleFactor,
-      waitUntil,
-      enableAutoCacheClear,
-      enableRunAllCodeChunks,
-      defaultImageFormat,
-      enableOffline,
+  private async initNotebook(): Promise<void> {
+    const {
       breakOnSingleNewLine,
       enableLinkify,
       mathRenderingOption,
@@ -285,9 +259,11 @@ class MarkdownToImageService extends Service {
       HTML5EmbedVideoAttributes,
       puppeteerArgs,
     } = this.config;
-    if (!chromePath) chromePath = await find()
-    const notebook = await Notebook.init({
-      notebookPath: notebookDirPath,
+
+    const resolvedChromePath = chromePath || await find();
+
+    this.notebook = await Notebook.init({
+      notebookPath: this.notebookDirPath,
       config: {
         breakOnSingleNewLine,
         enableLinkify,
@@ -307,7 +283,7 @@ class MarkdownToImageService extends Service {
         revealjsTheme,
         protocolsWhiteList,
         printBackground,
-        chromePath,
+        chromePath: resolvedChromePath,
         enableScriptExecution,
         enableHTML5Embed,
         HTML5EmbedUseImageSyntax,
@@ -318,78 +294,101 @@ class MarkdownToImageService extends Service {
         puppeteerArgs,
       },
     });
-
-
-    const asyncUnlink = promisify(fs.unlink);
-
-    function getCurrentTimeNumberString(): string {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = (now.getMonth() + 1).toString().padStart(2, '0');
-      const day = now.getDate().toString().padStart(2, '0');
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const seconds = now.getSeconds().toString().padStart(2, '0');
-      const randomString = Math.random().toString(36).substring(2, 8); // 生成一个随机字符串
-      return `${year}${month}${day}${hours}${minutes}${seconds}_${randomString}`;
-    }
-
-    async function generateAndSaveImage(notebookDirPath: string, markdownText: string, defaultImageFormat: "png" | "jpeg" | "webp", enableRunAllCodeChunks: boolean): Promise<Buffer> {
-      const currentTimeString = getCurrentTimeNumberString();
-      const readmeFilePath = path.join(notebookDirPath, `${currentTimeString}.md`);
-      await fs.promises.writeFile(readmeFilePath, markdownText);
-
-      const engine = notebook.getNoteMarkdownEngine(readmeFilePath);
-      await engine.htmlExport({offline: enableOffline, runAllCodeChunks: enableRunAllCodeChunks});
-
-      const readmeHtmlPath = path.join(notebookDirPath, `${currentTimeString}.html`);
-      await page.setViewport({width: width, height: height, deviceScaleFactor: deviceScaleFactor})
-      await page.goto('file://' + readmeHtmlPath.replace(/\\/g, '/'), {waitUntil: waitUntil});
-      const imageBuffer = await page.screenshot({fullPage: true, type: defaultImageFormat})
-      // const pElement = await page.$('.crossnote.markdown-preview');
-      // const imageBuffer = await pElement.screenshot({type: defaultImageFormat});
-      await page.close();
-      await context.close()
-
-      if (enableAutoCacheClear) {
-        await asyncUnlink(readmeHtmlPath);
-        await asyncUnlink(readmeFilePath);
-      }
-
-      return imageBuffer;
-    }
-
-    try {
-      // 处理 imageBuffer
-      return await generateAndSaveImage(notebookDirPath, markdownText, defaultImageFormat, enableRunAllCodeChunks)
-    } catch (error) {
-      logger.error('出错：', error);
-    }
-
-
   }
 
-  //
+  private async ensureDirExists(dirPath: string): Promise<void> {
+    if (!fs.existsSync(dirPath)) {
+      await fs.promises.mkdir(dirPath, {recursive: true});
+    }
+  }
+
+  private getCurrentTimeNumberString(): string {
+    const now = new Date();
+    const dateString = now.toISOString().replace(/[-:]/g, '').split('.')[0];
+    const randomString = Math.random().toString(36).substring(2, 8);
+    return `${dateString}_${randomString}`;
+  }
+
+  private async generateAndSaveImage(markdownText: string): Promise<Buffer> {
+    const {
+      height,
+      width,
+      deviceScaleFactor,
+      waitUntil,
+      enableOffline,
+      enableRunAllCodeChunks,
+      defaultImageFormat,
+      enableAutoCacheClear
+    } = this.config;
+
+    const currentTimeString = this.getCurrentTimeNumberString();
+    const readmeFilePath = path.join(this.notebookDirPath, `${currentTimeString}.md`);
+    const readmeHtmlPath = path.join(this.notebookDirPath, `${currentTimeString}.html`);
+
+    await fs.promises.writeFile(readmeFilePath, markdownText);
+
+    const engine = this.notebook.getNoteMarkdownEngine(readmeFilePath);
+    await engine.htmlExport({offline: enableOffline, runAllCodeChunks: enableRunAllCodeChunks});
+
+    const context = await this.browser.createBrowserContext();
+    const page = await context.newPage();
+
+    await page.setViewport({width, height, deviceScaleFactor});
+    await page.goto('file://' + readmeHtmlPath.replace(/\\/g, '/'), {waitUntil});
+
+    const imageBuffer = await page.screenshot({fullPage: true, type: defaultImageFormat});
+
+    await page.close();
+    await context.close();
+
+    if (enableAutoCacheClear) {
+      await Promise.all([
+        fs.promises.unlink(readmeHtmlPath),
+        fs.promises.unlink(readmeFilePath)
+      ]);
+    }
+
+    return imageBuffer;
+  }
+
+  async convertToImage(markdownText: string): Promise<Buffer> {
+    if (!this.browser) {
+      await this.initBrowser();
+    }
+
+    if (!this.notebook) {
+      await this.initNotebook();
+    }
+
+    await this.ensureDirExists(this.notebookDirPath);
+
+    try {
+      return await this.generateAndSaveImage(markdownText);
+    } catch (error) {
+      this.loggerForService.error('Error converting markdown to image:', error);
+      throw error;
+    }
+  }
 }
 
 // export default MarkdownToImageService;
 
 export async function apply(ctx: Context, config: Config) {
-  await ctx.inject(['puppeteer'], (ctx) => {
-    ctx.plugin(MarkdownToImageService, config)
+  ctx.inject(['puppeteer'], (ctx) => {
+    ctx.plugin(MarkdownToImageService, config);
 
     ctx.command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
       .action(async ({session}, markdownText) => {
         if (!markdownText) {
-          await session.send('请输入你要转换的 Markdown 文本内容：')
-          const userInput = await session.prompt()
-          if (!userInput) return `输入超时。`
-          markdownText = userInput
+          await session.send('请输入你要转换的 Markdown 文本内容：');
+          const userInput = await session.prompt();
+          if (!userInput) return `输入超时。`;
+          markdownText = userInput;
         }
-        const markdownToImage = new MarkdownToImageService(ctx, config)
-        const imageBuffer = await markdownToImage.convertToImage(markdownText)
-        return h.image(imageBuffer, `image/${config.defaultImageFormat}`)
-      })
+        const markdownToImage = new MarkdownToImageService(ctx, config);
+        const imageBuffer = await markdownToImage.convertToImage(markdownText);
+        return h.image(imageBuffer, `image/${config.defaultImageFormat}`);
+      });
   });
 
 }
