@@ -70,17 +70,60 @@ This is a test.
 - \`956758505\`
 `;
 
+interface ThemeSettings {
+  pageTheme: "light" | "dark";
+  codeTheme: string;
+  mermaidTheme: "default" | "dark" | "forest" | "neutral";
+}
+
+const themePresets: Record<string, ThemeSettings> = {
+  "github-light": {
+    pageTheme: "light",
+    codeTheme: "github",
+    mermaidTheme: "default",
+  },
+  "github-dark": {
+    pageTheme: "dark",
+    codeTheme: "github-dark",
+    mermaidTheme: "dark",
+  },
+  "atom-one-dark": {
+    pageTheme: "dark",
+    codeTheme: "atom-one-dark",
+    mermaidTheme: "dark",
+  },
+  dracula: {
+    pageTheme: "dark",
+    codeTheme: "dracula",
+    mermaidTheme: "dark",
+  },
+  "solarized-light": {
+    pageTheme: "light",
+    codeTheme: "solarized-light",
+    mermaidTheme: "default",
+  },
+  nord: {
+    pageTheme: "dark",
+    codeTheme: "nord",
+    mermaidTheme: "dark",
+  },
+};
+
+// --- 优化开始: 修改 Config 接口 ---
 export interface Config {
   width: number;
   height: number;
   deviceScaleFactor: number;
   defaultImageFormat: "png" | "jpeg" | "webp";
   waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
-  theme: "light" | "dark";
+  themePreset: string;
+  // 将自定义主题配置项扁平化到顶层
+  pageTheme: "light" | "dark";
   codeTheme: string;
   mermaidTheme: "default" | "dark" | "forest" | "neutral";
 }
 
+// --- 优化开始: 修改 Config Schema ---
 export const Config: Schema<Config> = Schema.object({
   width: Schema.number().default(800).description(`截图视口的宽度。`),
   height: Schema.number()
@@ -102,20 +145,30 @@ export const Config: Schema<Config> = Schema.object({
     .description(
       "页面加载完成的判断条件。`networkidle0` 能确保所有资源（如CDN上的CSS和JS）都加载完毕。"
     ),
-  theme: Schema.union(["light", "dark"])
-    .default("light")
-    .description(
-      "整体页面的主题风格。我们将使用 `github-markdown-css` 作为基础样式。"
-    ),
+  // 主题配置部分
+  themePreset: Schema.union([...Object.keys(themePresets), "custom"])
+    .default("github-dark")
+    .description("选择一个预设主题组合。选择 `custom` 可进行自定义搭配。"),
+
+  // 将原 customTheme 内的配置项移到此处，并使用 role('hidden') 控制显隐
+  pageTheme: Schema.union(["light", "dark"])
+    .default("dark")
+    .description("【自定义】整体页面的主题风格。")
+    .role("hidden", (config) => config.themePreset !== "custom"),
+
   codeTheme: Schema.string()
     .default("github-dark")
     .description(
-      "代码高亮主题。请使用 [highlight.js 的主题名](https://github.com/highlightjs/highlight.js/tree/main/src/styles)，例如 `github-dark`, `atom-one-dark`。"
-    ),
+      "【自定义】代码高亮主题。请使用 [highlight.js 的主题名](https://github.com/highlightjs/highlight.js/tree/main/src/styles)，例如 `github-dark`。"
+    )
+    .role("hidden", (config) => config.themePreset !== "custom"),
+    
   mermaidTheme: Schema.union(["default", "dark", "forest", "neutral"])
-    .default("default")
-    .description("Mermaid 图表的主题。"),
-}) as any;
+    .default("dark")
+    .description("【自定义】Mermaid 图表的主题。")
+    .role("hidden", (config) => config.themePreset !== "custom"),
+});
+
 
 declare module "koishi" {
   interface Context {
@@ -158,26 +211,35 @@ class MarkdownToImageService extends Service {
     });
   }
 
+  // --- 优化开始: 简化 getThemeSettings 方法 ---
+  private getThemeSettings(): ThemeSettings {
+    const { themePreset, pageTheme, codeTheme, mermaidTheme } = this.config;
+
+    if (themePreset !== "custom") {
+      // 如果不是自定义主题，则从预设中获取
+      return themePresets[themePreset] || themePresets["github-dark"];
+    }
+
+    // 如果是自定义主题，直接使用顶层配置项
+    return { pageTheme, codeTheme, mermaidTheme };
+  }
+
   private buildHtml(body: string): string {
-    const { theme, codeTheme, mermaidTheme } = this.config;
+    const { pageTheme, codeTheme, mermaidTheme } = this.getThemeSettings();
     return `
       <!DOCTYPE html>
-      <!-- 使用 'data-color-mode' 属性来正确触发 github-markdown-css 的内置主题，而不是使用 class 和 filter hack -->
-      <html lang="en" data-color-mode="${theme}">
+      <html lang="en" data-color-mode="${pageTheme}" data-light-theme="light" data-dark-theme="dark">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Markdown Render</title>
         <!-- KaTeX CSS -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-        <!-- Highlight.js CSS -->
+        <!-- Highlight.js CSS (使用解析出的 codeTheme) -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/${codeTheme}.min.css">
         <!-- 主题 CSS (github-markdown-css) -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
         <style>
-          /* 移除了所有主题覆盖的 CSS (如 filter 和 body background)。
-             现在完全依赖 github-markdown-css 根据 data-color-mode 来设置主题。
-             这能确保 light/dark 模式下背景和文字颜色都正确。*/
           .markdown-body {
             box-sizing: border-box;
             min-width: 200px;
@@ -193,18 +255,14 @@ class MarkdownToImageService extends Service {
         <!-- Mermaid JS -->
         <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
         <script>
-          // 初始化 Mermaid
-          // 当主主题为 dark 时，优先使用 mermaid 的 dark 主题以保证样式统一。
-          mermaid.initialize({ startOnLoad: true, theme: '${
-            theme === "dark" ? "dark" : mermaidTheme
-          }' });
+          // 初始化 Mermaid (使用解析出的 mermaidTheme)
+          mermaid.initialize({ startOnLoad: true, theme: '${mermaidTheme}' });
         </script>
       </body>
       </html>
     `;
   }
 
-  // 调整截图选项以包含背景色
   async convertToImage(markdownText: string): Promise<Buffer> {
     if (!this.browser) {
       await this.initBrowser();
@@ -228,8 +286,6 @@ class MarkdownToImageService extends Service {
       const imageBuffer = await page.screenshot({
         fullPage: true,
         type: this.config.defaultImageFormat,
-        // 将 omitBackground 设置为 false，以便将主题的背景色（浅色或深色）包含在最终的图片中。
-        // 这解决了透明背景在不同聊天客户端背景下可读性差的问题。
         omitBackground: false,
       });
 
@@ -246,7 +302,6 @@ class MarkdownToImageService extends Service {
 }
 
 export async function apply(ctx: Context, config: Config) {
-  // 注册服务，使其在 context 中可用 (ctx.markdownToImage)
   ctx.plugin(MarkdownToImageService, config);
 
   ctx
@@ -262,11 +317,39 @@ export async function apply(ctx: Context, config: Config) {
       }
 
       try {
-        const imageBuffer = await ctx.markdownToImage.convertToImage(markdownText);
+        const imageBuffer = await ctx.markdownToImage.convertToImage(
+          markdownText
+        );
         return h.image(imageBuffer, `image/${config.defaultImageFormat}`);
       } catch (e) {
         ctx.logger("markdownToImage").warn(e);
         return "图片生成失败，请检查日志。";
       }
+    });
+
+  ctx
+    .command("test-md", "测试 Markdown 图片转换")
+    .action(async ({ session }) => {
+      const markdown = `
+# Hello, Koishi
+
+This is a test.
+
+- LaTeX: $E=mc^2$
+- Code:
+  \`\`\`typescript
+  console.log('Hello, world!')
+  \`\`\`
+- Mermaid:
+  \`\`\`mermaid
+  graph TD;
+      A-->B;
+      A-->C;
+      B-->D;
+      C-->D;
+  \`\`\`
+`;
+      const imageBuffer = await ctx.markdownToImage.convertToImage(markdown);
+      return h.image(imageBuffer, "image/png");
     });
 }
