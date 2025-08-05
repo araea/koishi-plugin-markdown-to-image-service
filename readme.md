@@ -65,13 +65,10 @@ This is a test.
 
 - [Koishi](https://koishi.chat/)
 - [markdown-it](https://github.com/markdown-it/markdown-it)
-- [Puppeteer](https://pptr.dev/)
-- [KaTeX](https://katex.org/)
-- [highlight.js](https://highlightjs.org/)
 
-## 交流
+## QQ 群
 
-- QQ 群：`956758505`
+- `956758505`
 
 ## License
 

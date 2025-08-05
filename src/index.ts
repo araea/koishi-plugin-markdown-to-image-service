@@ -7,6 +7,7 @@ import hljs from "markdown-it-highlightjs";
 
 export const inject = {
   required: ["puppeteer"],
+  optional: ["markdownToImage"],
 };
 export const name = "markdown-to-image-service";
 export const usage = `## 命令
@@ -64,9 +65,9 @@ This is a test.
 }
 \`\`\`
 
-## 交流
+## QQ 群
 
-- QQ 群：\`956758505\`
+- \`956758505\`
 `;
 
 export interface Config {
@@ -97,7 +98,7 @@ export const Config: Schema<Config> = Schema.object({
     "networkidle0",
     "networkidle2",
   ])
-    .default("networkidle0")
+    .default("load")
     .description(
       "页面加载完成的判断条件。`networkidle0` 能确保所有资源（如CDN上的CSS和JS）都加载完毕。"
     ),
@@ -161,7 +162,8 @@ class MarkdownToImageService extends Service {
     const { theme, codeTheme, mermaidTheme } = this.config;
     return `
       <!DOCTYPE html>
-      <html lang="en" class="${theme === "dark" ? "dark" : ""}">
+      <!-- 使用 'data-color-mode' 属性来正确触发 github-markdown-css 的内置主题，而不是使用 class 和 filter hack -->
+      <html lang="en" data-color-mode="${theme}">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -173,25 +175,15 @@ class MarkdownToImageService extends Service {
         <!-- 主题 CSS (github-markdown-css) -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
         <style>
-          /* 基础样式适配 */
-          body {
-            background-color: transparent; /* 截图时背景透明 */
-          }
+          /* 移除了所有主题覆盖的 CSS (如 filter 和 body background)。
+             现在完全依赖 github-markdown-css 根据 data-color-mode 来设置主题。
+             这能确保 light/dark 模式下背景和文字颜色都正确。*/
           .markdown-body {
             box-sizing: border-box;
             min-width: 200px;
             max-width: 980px;
             margin: 0 auto;
             padding: 45px;
-          }
-          /* 黑暗模式适配 */
-          html.dark .markdown-body {
-            filter: invert(1) hue-rotate(180deg);
-          }
-          html.dark .markdown-body img,
-          html.dark .markdown-body video,
-          html.dark .markdown-body .mermaid > svg {
-            filter: invert(1) hue-rotate(180deg);
           }
         </style>
       </head>
@@ -202,26 +194,28 @@ class MarkdownToImageService extends Service {
         <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
         <script>
           // 初始化 Mermaid
-          mermaid.initialize({ startOnLoad: true, theme: '${mermaidTheme}' });
+          // 当主主题为 dark 时，优先使用 mermaid 的 dark 主题以保证样式统一。
+          mermaid.initialize({ startOnLoad: true, theme: '${
+            theme === "dark" ? "dark" : mermaidTheme
+          }' });
         </script>
       </body>
       </html>
     `;
   }
 
+  // 调整截图选项以包含背景色
   async convertToImage(markdownText: string): Promise<Buffer> {
     if (!this.browser) {
       await this.initBrowser();
     }
 
     const bodyHtml = this.md.render(markdownText);
-
     const fullHtml = this.buildHtml(bodyHtml);
 
     let page;
     try {
       page = await this.browser.newPage();
-
       await page.setViewport({
         width: this.config.width,
         height: this.config.height,
@@ -229,12 +223,14 @@ class MarkdownToImageService extends Service {
       });
 
       await page.setContent(fullHtml, { waitUntil: this.config.waitUntil });
-
       await page.bringToFront();
+
       const imageBuffer = await page.screenshot({
-        fullPage: true, // 截取完整页面
+        fullPage: true,
         type: this.config.defaultImageFormat,
-        omitBackground: true, // 背景透明
+        // 将 omitBackground 设置为 false，以便将主题的背景色（浅色或深色）包含在最终的图片中。
+        // 这解决了透明背景在不同聊天客户端背景下可读性差的问题。
+        omitBackground: false,
       });
 
       return imageBuffer;
@@ -250,9 +246,9 @@ class MarkdownToImageService extends Service {
 }
 
 export async function apply(ctx: Context, config: Config) {
+  // 注册服务，使其在 context 中可用 (ctx.markdownToImage)
   ctx.plugin(MarkdownToImageService, config);
 
-  const markdownToImage = new MarkdownToImageService(ctx, config);
   ctx
     .command(
       "markdownToImage [markdownText:text]",
@@ -264,8 +260,9 @@ export async function apply(ctx: Context, config: Config) {
         markdownText = await session.prompt();
         if (!markdownText) return `输入超时。`;
       }
+
       try {
-        const imageBuffer = await markdownToImage.convertToImage(markdownText);
+        const imageBuffer = await ctx.markdownToImage.convertToImage(markdownText);
         return h.image(imageBuffer, `image/${config.defaultImageFormat}`);
       } catch (e) {
         ctx.logger("markdownToImage").warn(e);
