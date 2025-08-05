@@ -109,7 +109,6 @@ const themePresets: Record<string, ThemeSettings> = {
   },
 };
 
-// --- 优化开始: 修改 Config 接口 ---
 export interface Config {
   width: number;
   height: number;
@@ -117,13 +116,11 @@ export interface Config {
   defaultImageFormat: "png" | "jpeg" | "webp";
   waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
   themePreset: string;
-  // 将自定义主题配置项扁平化到顶层
   pageTheme: "light" | "dark";
   codeTheme: string;
   mermaidTheme: "default" | "dark" | "forest" | "neutral";
 }
 
-// --- 优化开始: 修改 Config Schema ---
 export const Config: Schema<Config> = Schema.object({
   width: Schema.number().default(800).description(`截图视口的宽度。`),
   height: Schema.number()
@@ -211,16 +208,13 @@ class MarkdownToImageService extends Service {
     });
   }
 
-  // --- 优化开始: 简化 getThemeSettings 方法 ---
   private getThemeSettings(): ThemeSettings {
     const { themePreset, pageTheme, codeTheme, mermaidTheme } = this.config;
 
     if (themePreset !== "custom") {
-      // 如果不是自定义主题，则从预设中获取
       return themePresets[themePreset] || themePresets["github-dark"];
     }
 
-    // 如果是自定义主题，直接使用顶层配置项
     return { pageTheme, codeTheme, mermaidTheme };
   }
 
