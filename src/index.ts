@@ -109,63 +109,102 @@ const themePresets: Record<string, ThemeSettings> = {
   },
 };
 
-export interface Config {
+/**
+ * 渲染相关的配置
+ */
+interface RenderingConfig {
   width: number;
   height: number;
   deviceScaleFactor: number;
   defaultImageFormat: "png" | "jpeg" | "webp";
   waitUntil: "load" | "domcontentloaded" | "networkidle0" | "networkidle2";
-  themePreset: string;
+}
+
+/**
+ * 自定义主题的详细配置
+ */
+interface CustomThemeSettings {
   pageTheme: "light" | "dark";
   codeTheme: string;
   mermaidTheme: "default" | "dark" | "forest" | "neutral";
 }
 
-export const Config: Schema<Config> = Schema.object({
-  width: Schema.number().default(800).description(`截图视口的宽度。`),
-  height: Schema.number()
-    .default(100)
-    .description(`截图视口的初始高度（会自动撑开）。`),
-  deviceScaleFactor: Schema.number()
-    .default(2)
-    .description(`设备的缩放比率，建议为 2 以获得更清晰的图片。`),
-  defaultImageFormat: Schema.union(["png", "jpeg", "webp"])
-    .default("png")
-    .description("默认的图片输出格式。"),
-  waitUntil: Schema.union([
-    "load",
-    "domcontentloaded",
-    "networkidle0",
-    "networkidle2",
-  ])
-    .default("load")
-    .description(
-      "页面加载完成的判断条件。`networkidle0` 能确保所有资源（如CDN上的CSS和JS）都加载完毕。"
-    ),
-  // 主题配置部分
-  themePreset: Schema.union([...Object.keys(themePresets), "custom"])
-    .default("github-dark")
-    .description("选择一个预设主题组合。选择 `custom` 可进行自定义搭配。"),
+/**
+ * 主题配置，可以是预设模式或自定义模式
+ */
+type ThemeConfig =
+  | {
+      mode: "preset";
+      preset: keyof typeof themePresets;
+    }
+  | {
+      mode: "custom";
+      custom: CustomThemeSettings;
+    };
 
-  // 将原 customTheme 内的配置项移到此处，并使用 role('hidden') 控制显隐
-  pageTheme: Schema.union(["light", "dark"])
-    .default("dark")
-    .description("【自定义】整体页面的主题风格。")
-    .role("hidden", (config) => config.themePreset !== "custom"),
+export interface Config {
+  rendering: RenderingConfig;
+  theme: ThemeConfig;
+}
 
-  codeTheme: Schema.string()
-    .default("github-dark")
-    .description(
-      "【自定义】代码高亮主题。请使用 [highlight.js 的主题名](https://github.com/highlightjs/highlight.js/tree/main/src/styles)，例如 `github-dark`。"
-    )
-    .role("hidden", (config) => config.themePreset !== "custom"),
-    
-  mermaidTheme: Schema.union(["default", "dark", "forest", "neutral"])
-    .default("dark")
-    .description("【自定义】Mermaid 图表的主题。")
-    .role("hidden", (config) => config.themePreset !== "custom"),
-});
+export const Config: Schema<Config> = Schema.intersect([
+  Schema.object({
+    rendering: Schema.object({
+      width: Schema.number().default(800).description(`截图视口的宽度。`),
+      height: Schema.number()
+        .default(100)
+        .description(`截图视口的初始高度（页面内容会自动撑开）。`),
+      deviceScaleFactor: Schema.number()
+        .default(2)
+        .description(`设备的缩放比率，建议为 2 以获得更清晰的图片。`),
+      defaultImageFormat: Schema.union(["png", "jpeg", "webp"])
+        .default("png")
+        .description("默认的图片输出格式。"),
+      waitUntil: Schema.union([
+        "load",
+        "domcontentloaded",
+        "networkidle0",
+        "networkidle2",
+      ])
+        .default("load")
+        .description(
+          "页面加载完成的判断条件。`networkidle0` 能确保所有网络资源（如CDN上的CSS和JS）都加载完毕。"
+        ),
+    }).description("渲染设置"),
+  }),
+  Schema.object({
+    theme: Schema.union([
+      // 选项一：使用预设
+      Schema.object({
+        mode: Schema.const("preset").default("preset"),
+        preset: Schema.union(Object.keys(themePresets))
+          .default("github-dark")
+          .description("选择一个开箱即用的主题预设。"),
+      }).description("预设主题"),
 
+      // 选项二：使用自定义
+      Schema.object({
+        mode: Schema.const("custom"),
+        custom: Schema.object({
+          pageTheme: Schema.union(["light", "dark"])
+            .default("dark")
+            .description("整体页面的主题风格。"),
+          codeTheme: Schema.string()
+            .default("github-dark")
+            .description(
+              "代码高亮主题。请使用 [highlight.js 的主题名](https://github.com/highlightjs/highlight.js/tree/main/src/styles)，例如 `github-dark`。"
+            ),
+          mermaidTheme: Schema.union(["default", "dark", "forest", "neutral"])
+            .default("dark")
+            .description("Mermaid 图表的主题。"),
+        }),
+      }).description("自定义主题"),
+    ])
+      .description("主题配置")
+      // 默认使用 'preset' 模式和 'github-dark' 预设
+      .default({ mode: "preset", preset: "github-dark" }),
+  }),
+]) satisfies Schema<Config>;
 
 declare module "koishi" {
   interface Context {
@@ -209,13 +248,13 @@ class MarkdownToImageService extends Service {
   }
 
   private getThemeSettings(): ThemeSettings {
-    const { themePreset, pageTheme, codeTheme, mermaidTheme } = this.config;
-
-    if (themePreset !== "custom") {
-      return themePresets[themePreset] || themePresets["github-dark"];
+    const { theme } = this.config;
+    if (theme.mode === "preset") {
+      // 如果是预设模式，从预设列表中查找
+      return themePresets[theme.preset] || themePresets["github-dark"];
     }
-
-    return { pageTheme, codeTheme, mermaidTheme };
+    // 如果是自定义模式，直接返回自定义的配置
+    return theme.custom;
   }
 
   private buildHtml(body: string): string {
@@ -262,24 +301,32 @@ class MarkdownToImageService extends Service {
       await this.initBrowser();
     }
 
+    const { pageTheme } = this.getThemeSettings();
     const bodyHtml = this.md.render(markdownText);
     const fullHtml = this.buildHtml(bodyHtml);
 
     let page;
     try {
       page = await this.browser.newPage();
+      // 更新对配置的访问路径
       await page.setViewport({
-        width: this.config.width,
-        height: this.config.height,
-        deviceScaleFactor: this.config.deviceScaleFactor,
+        width: this.config.rendering.width,
+        height: this.config.rendering.height,
+        deviceScaleFactor: this.config.rendering.deviceScaleFactor,
       });
 
-      await page.setContent(fullHtml, { waitUntil: this.config.waitUntil });
+      await page.emulateMediaFeatures([
+        { name: "prefers-color-scheme", value: pageTheme },
+      ]);
+
+      await page.setContent(fullHtml, {
+        waitUntil: this.config.rendering.waitUntil,
+      });
       await page.bringToFront();
 
       const imageBuffer = await page.screenshot({
         fullPage: true,
-        type: this.config.defaultImageFormat,
+        type: this.config.rendering.defaultImageFormat,
         omitBackground: false,
       });
 
@@ -314,7 +361,10 @@ export async function apply(ctx: Context, config: Config) {
         const imageBuffer = await ctx.markdownToImage.convertToImage(
           markdownText
         );
-        return h.image(imageBuffer, `image/${config.defaultImageFormat}`);
+        return h.image(
+          imageBuffer,
+          `image/${config.rendering.defaultImageFormat}`
+        );
       } catch (e) {
         ctx.logger("markdownToImage").warn(e);
         return "图片生成失败，请检查日志。";
