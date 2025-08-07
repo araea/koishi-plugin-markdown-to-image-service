@@ -226,6 +226,7 @@ class MarkdownToImageService extends Service {
     this.md = new MarkdownIt({
       html: true, // 允许 HTML 标签
       linkify: true, // 自动转换链接
+      breaks: true,
     })
       .use(katex, { throwOnError: false, errorColor: " #cc0000" })
       .use(hljs, { auto: true }) // 使用 highlight.js 进行代码高亮
