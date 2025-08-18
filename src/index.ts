@@ -214,7 +214,6 @@ declare module "koishi" {
 
 class MarkdownToImageService extends Service {
   override readonly config: Config = {} as Config;
-  private browser: any = null;
   private loggerForService: any;
   private md: MarkdownIt;
 
@@ -240,12 +239,6 @@ class MarkdownToImageService extends Service {
           return fence(tokens, idx, options, env, self);
         };
       });
-  }
-
-  private async initBrowser(): Promise<void> {
-    this.ctx.inject(["puppeteer"], (ctx) => {
-      this.browser = ctx.puppeteer.browser;
-    });
   }
 
   private getThemeSettings(): ThemeSettings {
@@ -298,18 +291,14 @@ class MarkdownToImageService extends Service {
   }
 
   async convertToImage(markdownText: string): Promise<Buffer> {
-    if (!this.browser) {
-      await this.initBrowser();
-    }
-
     const { pageTheme } = this.getThemeSettings();
     const bodyHtml = this.md.render(markdownText);
     const fullHtml = this.buildHtml(bodyHtml);
 
     let page;
     try {
-      page = await this.browser.newPage();
-      // 更新对配置的访问路径
+      page = await this.ctx.puppeteer.page();
+
       await page.setViewport({
         width: this.config.rendering.width,
         height: this.config.rendering.height,
