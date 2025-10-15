@@ -92,19 +92,24 @@ const themePresets: Record<string, ThemeSettings> = {
     codeTheme: "atom-one-dark",
     mermaidTheme: "dark",
   },
-  dracula: {
-    pageTheme: "dark",
-    codeTheme: "dracula",
-    mermaidTheme: "dark",
-  },
-  "solarized-light": {
+  "atom-one-light": {
     pageTheme: "light",
-    codeTheme: "solarized-light",
+    codeTheme: "atom-one-light",
     mermaidTheme: "default",
   },
-  nord: {
+  monokai: {
     pageTheme: "dark",
-    codeTheme: "nord",
+    codeTheme: "monokai",
+    mermaidTheme: "dark",
+  },
+  vs2015: {
+    pageTheme: "dark",
+    codeTheme: "vs2015",
+    mermaidTheme: "dark",
+  },
+  "tokyo-night": {
+    pageTheme: "dark",
+    codeTheme: "tokyo-night-dark",
     mermaidTheme: "dark",
   },
 };
@@ -223,12 +228,12 @@ class MarkdownToImageService extends Service {
     this.loggerForService = ctx.logger("markdownToImage");
 
     this.md = new MarkdownIt({
-      html: true, // 允许 HTML 标签
-      linkify: true, // 自动转换链接
+      html: true,
+      linkify: true,
       breaks: true,
     })
       .use(katex, { throwOnError: false, errorColor: " #cc0000" })
-      .use(hljs, { auto: true }) // 使用 highlight.js 进行代码高亮
+      .use(hljs, { auto: true })
       .use((md) => {
         const fence = md.renderer.rules.fence!;
         md.renderer.rules.fence = (tokens, idx, options, env, self) => {
@@ -253,6 +258,16 @@ class MarkdownToImageService extends Service {
 
   private buildHtml(body: string): string {
     const { pageTheme, codeTheme, mermaidTheme } = this.getThemeSettings();
+
+    // 使用 jsDelivr CDN 资源（国内可访问）
+    const katexCss =
+      "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css";
+    const highlightCss = `https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/${codeTheme}.min.css`;
+    const githubMarkdownCss =
+      "https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.0/github-markdown.css";
+    const mermaidJs =
+      "https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js";
+
     return `
       <!DOCTYPE html>
       <html lang="en" data-color-mode="${pageTheme}" data-light-theme="light" data-dark-theme="dark">
@@ -260,12 +275,12 @@ class MarkdownToImageService extends Service {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Markdown Render</title>
-        <!-- KaTeX CSS -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-        <!-- Highlight.js CSS (使用解析出的 codeTheme) -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/${codeTheme}.min.css">
-        <!-- 主题 CSS (github-markdown-css) -->
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
+        <!-- KaTeX CSS (CDN) -->
+        <link rel="stylesheet" href="${katexCss}">
+        <!-- Highlight.js CSS (CDN) -->
+        <link rel="stylesheet" href="${highlightCss}">
+        <!-- GitHub Markdown CSS (CDN) -->
+        <link rel="stylesheet" href="${githubMarkdownCss}">
         <style>
           .markdown-body {
             box-sizing: border-box;
@@ -279,10 +294,10 @@ class MarkdownToImageService extends Service {
       <body class="markdown-body">
         ${body}
         
-        <!-- Mermaid JS -->
-        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+        <!-- Mermaid JS (CDN) -->
+        <script src="${mermaidJs}"></script>
         <script>
-          // 初始化 Mermaid (使用解析出的 mermaidTheme)
+          // 初始化 Mermaid
           mermaid.initialize({ startOnLoad: true, theme: '${mermaidTheme}' });
         </script>
       </body>
@@ -309,9 +324,11 @@ class MarkdownToImageService extends Service {
         { name: "prefers-color-scheme", value: pageTheme },
       ]);
 
+      // 直接设置 HTML 内容，无需加载本地文件
       await page.setContent(fullHtml, {
         waitUntil: this.config.rendering.waitUntil,
       });
+
       await page.bringToFront();
 
       const imageBuffer = await page.screenshot({
