@@ -19,6 +19,8 @@ export const usage = `## 命令
 - **用法 1**：\`markdownToImage # Hello World\`
 - **用法 2**：直接输入 \`markdownToImage\`，根据提示输入 Markdown 内容。
 
+注意，由于使用了 jsDelivr CDN，国内用户可能需要使用代理以确保资源加载成功。
+
 ## 服务
 
 本插件提供 \`markdownToImage\` 服务，供其他插件调用。
