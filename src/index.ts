@@ -382,7 +382,7 @@ export async function apply(ctx: Context, config: Config) {
 
   ctx
     .command("test-md", "测试 Markdown 图片转换")
-    .action(async ({ session }) => {
+    .action(async ({ }) => {
       const markdown = `
 # Hello, Koishi
 
