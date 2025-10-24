@@ -295,7 +295,7 @@ class MarkdownToImageService extends Service {
       </head>
       <body class="markdown-body">
         ${body}
-        
+
         <!-- Mermaid JS (CDN) -->
         <script src="${mermaidJs}"></script>
         <script>
@@ -308,47 +308,47 @@ class MarkdownToImageService extends Service {
   }
 
   async convertToImage(markdownText: string): Promise<Buffer> {
-    const { pageTheme } = this.getThemeSettings();
-    const bodyHtml = this.md.render(markdownText);
-    const fullHtml = this.buildHtml(bodyHtml);
+      const { pageTheme } = this.getThemeSettings();
+      const bodyHtml = this.md.render(markdownText);
+      const fullHtml = this.buildHtml(bodyHtml);
 
-    let page;
-    try {
-      page = await this.ctx.puppeteer.page();
+      let page: Awaited<ReturnType<typeof this.ctx.puppeteer.page>> | undefined;
+      try {
+        page = await this.ctx.puppeteer.page();
 
-      await page.setViewport({
-        width: this.config.rendering.width,
-        height: this.config.rendering.height,
-        deviceScaleFactor: this.config.rendering.deviceScaleFactor,
-      });
+        await page.setViewport({
+          width: this.config.rendering.width,
+          height: this.config.rendering.height,
+          deviceScaleFactor: this.config.rendering.deviceScaleFactor,
+        });
 
-      await page.emulateMediaFeatures([
-        { name: "prefers-color-scheme", value: pageTheme },
-      ]);
+        await page.emulateMediaFeatures([
+          { name: "prefers-color-scheme", value: pageTheme },
+        ]);
 
-      // 直接设置 HTML 内容，无需加载本地文件
-      await page.setContent(fullHtml, {
-        waitUntil: this.config.rendering.waitUntil,
-      });
+        // 直接设置 HTML 内容，无需加载本地文件
+        await page.setContent(fullHtml, {
+          waitUntil: this.config.rendering.waitUntil,
+        });
 
-      await page.bringToFront();
+        await page.bringToFront();
 
-      const imageBuffer = await page.screenshot({
-        fullPage: true,
-        type: this.config.rendering.defaultImageFormat,
-        omitBackground: false,
-      });
+        const imageBuffer = await page.screenshot({
+          fullPage: true,
+          type: this.config.rendering.defaultImageFormat,
+          omitBackground: false,
+        });
 
-      return imageBuffer;
-    } catch (error) {
-      this.loggerForService.error("Error converting markdown to image:", error);
-      throw error;
-    } finally {
-      if (page) {
-        await page.close();
+        return imageBuffer;
+      } catch (error) {
+        this.loggerForService.error("Error converting markdown to image:", error);
+        throw error;
+      } finally {
+        if (page) {
+          await page.close();
+        }
       }
     }
-  }
 }
 
 export async function apply(ctx: Context, config: Config) {
