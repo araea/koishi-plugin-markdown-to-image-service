@@ -4,8 +4,6 @@ koishi-plugin-markdown-to-image-service
 [<img alt="github" src="https://img.shields.io/badge/github-araea/markdown_to_image-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/araea/koishi-plugin-markdown-to-image-service)
 [<img alt="npm" src="https://img.shields.io/npm/v/koishi-plugin-markdown-to-image-service.svg?style=for-the-badge&color=fc8d62&logo=npm" height="20">](https://www.npmjs.com/package/koishi-plugin-markdown-to-image-service)
 
-## 简介
-
 Koishi 的 Markdown 转图片服务插件，支持 LaTeX、Mermaid 与代码高亮。
 
 ## 命令
