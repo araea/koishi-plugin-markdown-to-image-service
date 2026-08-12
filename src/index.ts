@@ -222,7 +222,7 @@ declare module "koishi" {
 class MarkdownToImageService extends Service {
   override readonly config: Config = {} as Config;
   private loggerForService: any;
-  private md: MarkdownIt;
+  private md: InstanceType<typeof MarkdownIt>;
 
   constructor(ctx: Context, config: Config) {
     super(ctx, "markdownToImage", true);
