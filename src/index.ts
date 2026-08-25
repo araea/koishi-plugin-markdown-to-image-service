@@ -8,10 +8,7 @@ import { katexCss, highlightCss, mermaidJs } from './assets'
 import { baseCss } from './styles'
 import { resolveTheme, ThemeConfig, ThemeSettings, themePresets } from './theme'
 
-export const inject = {
-  required: ['puppeteer'],
-  optional: ['markdownToImage'],
-}
+export const inject = ['puppeteer']
 
 export const name = 'markdown-to-image-service'
 
