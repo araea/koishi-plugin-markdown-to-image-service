@@ -331,9 +331,9 @@ export async function apply(ctx: Context, config: Config) {
     .command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
-        await session.send('请输入你要转换的 Markdown 文本内容：')
+        await session.send('⚠️ 请输入要转换的 Markdown 文本：')
         markdownText = await session.prompt()
-        if (!markdownText) return '输入超时。'
+        if (!markdownText) return '⚠️ 输入超时。'
       }
 
       try {
@@ -341,7 +341,7 @@ export async function apply(ctx: Context, config: Config) {
         return h.image(imageBuffer, `image/${config.rendering.imageFormat}`)
       } catch (e) {
         ctx.logger('markdown-to-image').warn(e)
-        return '图片生成失败，请检查日志。'
+        return '❌ 图片生成失败，请检查日志。'
       }
     })
 
