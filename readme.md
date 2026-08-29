@@ -1,10 +1,15 @@
 koishi-plugin-markdown-to-image-service
-========================
+=======================================
 
 [<img alt="github" src="https://img.shields.io/badge/github-araea/markdown_to_image-8da0cb?style=for-the-badge&labelColor=555555&logo=github" height="20">](https://github.com/araea/koishi-plugin-markdown-to-image-service)
 [<img alt="npm" src="https://img.shields.io/npm/v/koishi-plugin-markdown-to-image-service.svg?style=for-the-badge&color=fc8d62&logo=npm" height="20">](https://www.npmjs.com/package/koishi-plugin-markdown-to-image-service)
 
-Koishi 的 Markdown 转图片服务插件。基于 Puppeteer 与本地化的 KaTeX / highlight.js / Mermaid，**完全离线渲染，不依赖任何 CDN**。
+Koishi 的 Markdown 转图片服务插件。基于 Puppeteer 与本地化的 KaTeX / highlight.js / Mermaid，完全离线渲染，不依赖任何 CDN。
+
+## 使用
+
+1. 启动 `puppeteer` 服务。
+2. `markdownToImage` 把文本画成图；`test-md` 出一份含公式、代码、表格与 Mermaid 的样张。
 
 ## 特性
 
@@ -16,7 +21,7 @@ Koishi 的 Markdown 转图片服务插件。基于 Puppeteer 与本地化的 KaT
 - **自适应宽度**：超宽表格 / 代码 / 公式会自动扩展图片宽度，避免被裁剪。
 - **高清输出**：默认 `deviceScaleFactor = 2`，支持 png / jpeg / webp。
 
-## 命令
+## 指令
 
 ### `markdownToImage [markdownText:text]`
 
@@ -86,7 +91,7 @@ graph TD;
 
 ## QQ 群
 
-- `956758505`
+- 956758505
 
 <br>
 
