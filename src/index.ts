@@ -12,72 +12,22 @@ export const inject = ['puppeteer']
 
 export const name = 'markdown-to-image-service'
 
-export const usage = `## 命令
+export const usage = `## 使用
 
-### \`markdownToImage [markdownText:text]\`
+\`markdownToImage\` 将 Markdown 转为图片；\`test-md\` 输出测试样张。
 
-将 Markdown 文本转换为图片。
+## 指令
 
-- **用法 1**：\`markdownToImage # Hello World\`
-- **用法 2**：直接输入 \`markdownToImage\`，根据提示输入 Markdown 内容。
-
-支持：LaTeX 公式（行内 \`$...$\` 与块级 \`$$...$$\`、\`\\(...\\)\`、\`\\[...\\]\`）、Mermaid 图表、代码高亮、表格、任务列表、脚注、上下标、定义列表、emoji、自定义容器（\`:::note / :::tip / :::warning / :::danger\`）等。
-
-所有样式与字体均已本地化内联，**无需任何 CDN / 网络**，彻底避免因资源加载失败导致的公式错位、样式丢失等问题。
+| 指令 | 说明 |
+| --- | --- |
+| \`markdownToImage [文本]\` | Markdown 转图片 |
+| \`test-md\` | 渲染测试样张 |
 
 ## 服务
 
-本插件提供 \`markdownToImage\` 服务，供其他插件调用。
-
 \`\`\`typescript
 ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>
-\`\`\`
-
-### 示例
-
-\`\`\`typescript
-import { Context, h } from 'koishi'
-import {} from 'koishi-plugin-markdown-to-image-service'
-
-export const inject = {
-  required: ['markdownToImage'],
-}
-
-export function apply(ctx: Context) {
-  ctx.command('test-md', '测试 Markdown 图片转换')
-    .action(async () => {
-      const markdown = \`
-# Hello, Koishi
-
-行内公式 $E=mc^2$，块级公式：
-
-$$\\int_{-\\\\infty}^{\\\\infty} e^{-x^2} dx = \\\\sqrt{\\\\pi}$$
-
-- 代码：
-  \\\`\\\`\\\`typescript
-  console.log('Hello, world!')
-  \\\`\\\`\\\`
-- 表格：
-
-| 名称 | 值 |
-| ---- | -- |
-| 甲   | 1  |
-| 乙   | 2  |
-
-\\\`\\\`\\\`mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
-\\\`\\\`\\\`
-\`
-      const imageBuffer = await ctx.markdownToImage.convertToImage(markdown)
-      return h.image(imageBuffer, 'image/png')
-    })
-}
-\`\`\`
-`
+\`\`\``
 
 export interface RenderingConfig {
   /** 初始视口宽度（图片内容宽度）。 */
