@@ -212,7 +212,7 @@ function mathBlock(state: any, startLine: number, endLine: number, silent: boole
  * 基于现代 KaTeX 的 markdown-it 数学插件。
  *
  * 相比 markdown-it-katex（依赖陈旧的 katex@0.6），本插件：
- * - 使用 katex@0.16，公式渲染与对齐更完善；
+ * - 使用 katex@0.18，公式渲染与对齐更完善；
  * - 块级公式不再被错误地包裹进 `<p>`，直接输出 `katex-display`；
  * - 额外支持 `\(...\)` 与 `\[...\]` 分隔符；
  * - 渲染失败时回退显示公式源码，而不是输出破碎的 HTML。

@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-markdown-to-image-service",
   "description": "Koishi 的 Markdown 转图片服务插件。",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "highlight.js": "^11.12.0",
-    "katex": "^0.16.47",
+    "katex": "^0.18.5",
     "markdown-it": "^15.0.1",
     "markdown-it-abbr": "^2.0.0",
     "markdown-it-container": "^4.0.0",
