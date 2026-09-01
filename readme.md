@@ -8,13 +8,13 @@ Koishi 的 Markdown 转图片服务插件。
 
 ## 使用
 
-`markdownToImage` 将 Markdown 转为图片；`test-md` 输出测试样张。
+`mdimg` 将 Markdown 转为图片；`test-md` 输出测试样张。
 
 ## 指令
 
 | 指令 | 说明 |
 | --- | --- |
-| `markdownToImage [文本]` | Markdown 转图片 |
+| `mdimg [文本]` | Markdown 转图片 |
 | `test-md` | 渲染测试样张 |
 
 ## 服务

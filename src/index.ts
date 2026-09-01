@@ -14,13 +14,13 @@ export const name = 'markdown-to-image-service'
 
 export const usage = `## 使用
 
-\`markdownToImage\` 将 Markdown 转为图片；\`test-md\` 输出测试样张。
+\`mdimg\` 将 Markdown 转为图片；\`test-md\` 输出测试样张。
 
 ## 指令
 
 | 指令 | 说明 |
 | --- | --- |
-| \`markdownToImage [文本]\` | Markdown 转图片 |
+| \`mdimg [文本]\` | Markdown 转图片 |
 | \`test-md\` | 渲染测试样张 |
 
 ## 服务
@@ -278,7 +278,8 @@ export async function apply(ctx: Context, config: Config) {
   ctx.plugin(MarkdownToImageService, config)
 
   ctx
-    .command('markdownToImage [markdownText:text]', '将 Markdown 文本转换为图片')
+    .command('mdimg [markdownText:text]', '将 Markdown 文本转换为图片')
+    .alias('markdownToImage')
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
         await session.send('⚠️ 请输入要转换的 Markdown 文本：')
