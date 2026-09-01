@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "koishi-plugin-puppeteer": "^3.9.0",
-    "typescript": "^7.0.2",
+    "typescript": "^5.9.3",
     "yml-register": "^1.2.5"
   },
   "dependencies": {
