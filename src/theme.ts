@@ -53,5 +53,5 @@ export type ThemeConfig =
 
 export function resolveTheme(config: ThemeConfig): ThemeSettings {
   if (config.mode === 'custom') return config.custom
-  return themePresets[config.preset] ?? themePresets['github-dark']
+  return themePresets[config.preset] ?? themePresets['github-light']
 }

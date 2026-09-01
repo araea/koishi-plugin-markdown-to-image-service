@@ -9,21 +9,20 @@ import { baseCss } from './styles'
 import { resolveTheme, ThemeConfig, ThemeSettings, themePresets } from './theme'
 
 export const inject = {
-  required: ['puppeteer', 'markdownToImage'],
+  required: ['puppeteer'],
 }
 
 export const name = 'markdown-to-image-service'
 
 export const usage = `## 使用
 
-\`mdimg\` 将 Markdown 转为图片；\`test-md\` 输出测试样张。
+\`mdimg\` 将 Markdown 转为图片。
 
 ## 指令
 
 | 指令 | 说明 |
 | --- | --- |
 | \`mdimg [文本]\` | Markdown 转图片 |
-| \`test-md\` | 渲染测试样张 |
 
 ## 服务
 
@@ -91,7 +90,7 @@ export const Config: Schema<Config> = Schema.intersect([
       Schema.object({
         mode: Schema.const('preset').default('preset'),
         preset: Schema.union(Object.keys(themePresets))
-          .default('github-dark')
+          .default('github-light')
           .description('选择一个开箱即用的主题预设。'),
       }).description('预设主题'),
       Schema.object({
@@ -112,7 +111,7 @@ export const Config: Schema<Config> = Schema.intersect([
       }).description('自定义主题'),
     ])
       .description('主题配置')
-      .default({ mode: 'preset', preset: 'github-dark' }),
+      .default({ mode: 'preset', preset: 'github-light' }),
   }),
 ]) satisfies Schema<Config>
 
@@ -296,72 +295,5 @@ export async function apply(ctx: Context, config: Config) {
         ctx.logger('markdown-to-image').warn(e)
         return '❌ 图片生成失败，请检查日志。'
       }
-    })
-
-  ctx
-    .command('test-md', '测试 Markdown 图片转换')
-    .action(async () => {
-      const markdown = [
-        '# Markdown 渲染测试',
-        '',
-        '这是一段**加粗**、*斜体*、~~删除线~~、`行内代码` 与 [链接](https://koishi.chat) 的文本。',
-        '',
-        '## 公式',
-        '',
-        '行内公式 $E=mc^2$ 与 $\\int_0^1 x^2 dx$。',
-        '',
-        '块级公式：',
-        '',
-        '$$\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}$$',
-        '',
-        '对齐方程组：',
-        '',
-        '$$\\begin{aligned}',
-        'a &= b + c \\\\',
-        'd &= e - f',
-        '\\end{aligned}$$',
-        '',
-        '## 代码',
-        '',
-        '```typescript',
-        "function greet(name: string): string {",
-        "  return `Hello, ${name}!`",
-        '}',
-        '```',
-        '',
-        '## 表格',
-        '',
-        '| 名称 | 值 | 说明 |',
-        '| ---- | -- | ---- |',
-        '| 甲   | 1  | 第一 |',
-        '| 乙   | 2  | 第二 |',
-        '',
-        '## 列表',
-        '',
-        '- [x] 已完成事项',
-        '- [ ] 待办事项',
-        '',
-        '## 引用与容器',
-        '',
-        '> 这是一段引用。',
-        '',
-        ':::tip 提示',
-        '这是一个提示容器。',
-        ':::',
-        '',
-        '## Mermaid',
-        '',
-        '```mermaid',
-        'graph TD;',
-        '    A-->B;',
-        '    A-->C;',
-        '    B-->D;',
-        '    C-->D;',
-        '```',
-        '',
-      ].join('\n')
-
-      const imageBuffer = await ctx.markdownToImage.convertToImage(markdown)
-      return h.image(imageBuffer, `image/${config.rendering.imageFormat}`)
     })
 }
