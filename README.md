@@ -15,7 +15,6 @@ yarn add koishi-plugin-markdown-to-image-service
 | 指令 | 说明 |
 | --- | --- |
 | `mdimg [文本]` | 将 Markdown 转为图片 |
-| `test-md` | 输出测试样张 |
 
 ## 服务
 

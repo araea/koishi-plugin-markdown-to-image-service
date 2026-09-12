@@ -22,7 +22,7 @@ export const usage = `## 使用
 
 | 指令 | 说明 |
 | --- | --- |
-| \`mdimg [文本]\` | Markdown 转图片 |
+| \`mdimg [文本]\` | 将 Markdown 转为图片 |
 
 ## 服务
 
