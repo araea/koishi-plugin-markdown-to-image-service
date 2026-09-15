@@ -1,63 +1,57 @@
+import { FONT_STACK, MONO_STACK, scheme, SHAPE } from './m3'
+
 /**
- * 自包含的 Markdown 排版样式（替代外部 github-markdown-css 依赖）。
- * 通过 CSS 变量区分明暗主题，使用系统字体栈以覆盖中英文。
+ * 自包含的 Markdown 排版样式。
+ *
+ * 明暗两套变量都由 Material 3 的色调板推出，与其它插件同源；
+ * 代码高亮仍交给 highlight.js 的主题文件，那部分是语法着色，不归设计系统管。
  */
+
+/** 文档类的主色取中性蓝：长文里主色只出现在链接和强调上，不该抢戏。 */
+const HUE = 258
+const LIGHT = scheme(HUE)
+const DARK = scheme(HUE, true)
+
+/** 把一套配色摊成 `--md-*` 变量。两套主题共用这张表，只有取值不同。 */
+function vars(c: ReturnType<typeof scheme>, dark: boolean) {
+  return `
+  --md-bg: ${c.surface};
+  --md-fg: ${c.onSurface};
+  --md-fg-muted: ${c.onSurfaceVariant};
+  --md-fg-faint: ${c.outline};
+  --md-border: ${c.outlineVariant};
+  --md-border-strong: ${c.outline};
+  --md-accent: ${c.primary};
+  --md-accent-weak: ${c.primaryContainer};
+  --md-code-bg: ${c.surfaceContainerHigh};
+  --md-code-block-bg: ${c.surfaceContainerLow};
+  --md-blockquote-bg: ${c.surfaceContainerLow};
+  --md-blockquote-border: ${c.primary};
+  --md-table-header-bg: ${c.surfaceContainerHigh};
+  --md-table-stripe: ${c.surfaceContainerLow};
+  --md-mark-bg: ${c.tertiaryContainer};
+  --md-mark-fg: ${c.onTertiaryContainer};
+  --md-ins-bg: ${c.secondaryContainer};
+  --md-danger: ${c.error};
+  --md-kbd-bg: ${c.surfaceContainerHigh};
+  --md-kbd-border: ${c.outlineVariant};
+  --md-shadow: 0 0 0 1px ${c.outlineVariant};
+  --md-radius-s: ${SHAPE.extraSmall}px;
+  --md-radius-m: ${SHAPE.medium}px;
+  --md-radius-l: ${SHAPE.large}px;
+  --md-radius-xl: ${SHAPE.extraLarge}px;
+  --md-font: ${FONT_STACK};
+  --md-font-mono: ${MONO_STACK};
+  color-scheme: ${dark ? 'dark' : 'light'};`
+}
+
 export function baseCss(): string {
   return `
-:root {
-  color-scheme: light;
-}
-html[data-theme="dark"] {
-  color-scheme: dark;
-}
-
 :root,
-html[data-theme="light"] {
-  --md-bg: #ffffff;
-  --md-fg: #1f2328;
-  --md-fg-muted: #59636e;
-  --md-fg-faint: #818b98;
-  --md-border: #d1d9e0;
-  --md-border-strong: #b1bac4;
-  --md-accent: #0969da;
-  --md-accent-weak: rgba(9, 105, 218, 0.12);
-  --md-code-bg: rgba(175, 184, 193, 0.22);
-  --md-code-block-bg: #f6f8fa;
-  --md-blockquote-bg: #f6f8fa;
-  --md-blockquote-border: #d1d9e0;
-  --md-table-header-bg: #f6f8fa;
-  --md-table-stripe: #f6f8fa;
-  --md-mark-bg: #fff8c5;
-  --md-mark-fg: #1f2328;
-  --md-ins-bg: #dafbe1;
-  --md-danger: #d1242f;
-  --md-kbd-bg: #f6f8fa;
-  --md-kbd-border: #d1d9e0;
-  --md-shadow: 0 0 0 1px rgba(31, 35, 40, 0.08);
+html[data-theme="light"] {${vars(LIGHT, false)}
 }
 
-html[data-theme="dark"] {
-  --md-bg: #0d1117;
-  --md-fg: #e6edf3;
-  --md-fg-muted: #9198a1;
-  --md-fg-faint: #6e7681;
-  --md-border: #30363d;
-  --md-border-strong: #3d444d;
-  --md-accent: #4493f8;
-  --md-accent-weak: rgba(68, 147, 248, 0.18);
-  --md-code-bg: rgba(110, 118, 129, 0.4);
-  --md-code-block-bg: #161b22;
-  --md-blockquote-bg: #161b22;
-  --md-blockquote-border: #3d444d;
-  --md-table-header-bg: #161b22;
-  --md-table-stripe: #161b22;
-  --md-mark-bg: #bb8009;
-  --md-mark-fg: #ffffff;
-  --md-ins-bg: rgba(63, 185, 80, 0.22);
-  --md-danger: #ff7b72;
-  --md-kbd-bg: #161b22;
-  --md-kbd-border: #3d444d;
-  --md-shadow: 0 0 0 1px rgba(230, 237, 243, 0.1);
+html[data-theme="dark"] {${vars(DARK, true)}
 }
 
 * {
@@ -74,9 +68,7 @@ body {
 .markdown-body {
   background: var(--md-bg);
   color: var(--md-fg);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑",
-    Helvetica, Arial, sans-serif;
+  font-family: var(--md-font);
   font-size: 16px;
   line-height: 1.65;
   word-wrap: break-word;
@@ -104,20 +96,22 @@ body {
 .markdown-body h4,
 .markdown-body h5,
 .markdown-body h6 {
-  margin: 24px 0 16px;
+  margin-top: 28px;
+  margin-bottom: 14px;
+  /* Expressive 的强调字重。600 在只装了 400/700 的机器上会匹配到 700，
+     取 500 则会悄悄回落成常规字重，标题层级就塌了 */
   font-weight: 600;
   line-height: 1.3;
 }
 
+/* 层级靠字号与留白拉开，不再画下划线——线会把长文切得很碎 */
 .markdown-body h1 {
   font-size: 2em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--md-border);
+  letter-spacing: -0.5px;
 }
 .markdown-body h2 {
   font-size: 1.5em;
-  padding-bottom: 0.3em;
-  border-bottom: 1px solid var(--md-border);
+  letter-spacing: -0.25px;
 }
 .markdown-body h3 {
   font-size: 1.25em;
@@ -133,7 +127,6 @@ body {
   color: var(--md-fg-muted);
 }
 
-/* ---------- 段落与文本 ---------- */
 .markdown-body p {
   margin: 0 0 16px;
 }
@@ -157,14 +150,14 @@ body {
 .markdown-body mark {
   background: var(--md-mark-bg);
   color: var(--md-mark-fg);
-  border-radius: 3px;
+  border-radius: var(--md-radius-s);
   padding: 0.1em 0.2em;
 }
 
 .markdown-body ins {
   background: var(--md-ins-bg);
   text-decoration: none;
-  border-radius: 3px;
+  border-radius: var(--md-radius-s);
   padding: 0.1em 0.2em;
 }
 
@@ -179,10 +172,11 @@ body {
   text-decoration: none;
 }
 
+/* 分隔线收到 1px：M3 里分隔线是最低一级的层次手段，粗了就成了装饰 */
 .markdown-body hr {
-  height: 0.25em;
+  height: 1px;
   padding: 0;
-  margin: 24px 0;
+  margin: 28px 0;
   background-color: var(--md-border);
   border: 0;
 }
@@ -225,7 +219,7 @@ body {
   color: var(--md-fg-muted);
   border-left: 0.25em solid var(--md-blockquote-border);
   background: var(--md-blockquote-bg);
-  border-radius: 0 6px 6px 0;
+  border-radius: var(--md-radius-m);
   padding-top: 0.25em;
   padding-bottom: 0.25em;
 }
@@ -242,8 +236,7 @@ body {
 .markdown-body pre,
 .markdown-body samp,
 .markdown-body tt {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family: var(--md-font-mono);
   font-size: 0.875em;
 }
 
@@ -252,14 +245,14 @@ body {
   color: var(--md-fg);
   padding: 0.2em 0.4em;
   margin: 0;
-  border-radius: 6px;
+  border-radius: var(--md-radius-m);
   white-space: break-spaces;
 }
 
 .markdown-body pre {
   margin: 0 0 16px;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--md-radius-l);
   overflow: hidden;
   background: var(--md-code-block-bg);
   line-height: 1.5;
@@ -292,7 +285,7 @@ body {
   background: var(--md-kbd-bg);
   border: 1px solid var(--md-kbd-border);
   border-bottom-color: var(--md-border-strong);
-  border-radius: 6px;
+  border-radius: var(--md-radius-m);
   box-shadow: inset 0 -1px 0 var(--md-border);
   color: var(--md-fg);
   line-height: 1.2;
@@ -327,7 +320,7 @@ body {
 .markdown-body img {
   max-width: 100%;
   height: auto;
-  border-radius: 6px;
+  border-radius: var(--md-radius-m);
   background: var(--md-bg);
 }
 
@@ -384,10 +377,10 @@ body {
 }
 .markdown-body .katex-error {
   color: var(--md-danger);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--md-font-mono);
   background: var(--md-code-bg);
   padding: 0.1em 0.4em;
-  border-radius: 6px;
+  border-radius: var(--md-radius-m);
 }
 
 /* ---------- Mermaid ---------- */
@@ -407,7 +400,7 @@ body {
 .markdown-body .md-container {
   margin: 0 0 16px;
   padding: 0.75em 1em;
-  border-radius: 8px;
+  border-radius: var(--md-radius-l);
   border-left: 0.3em solid var(--md-border-strong);
   background: var(--md-blockquote-bg);
 }
@@ -441,7 +434,7 @@ body {
 .markdown-body table::-webkit-scrollbar-thumb,
 .markdown-body .katex-display::-webkit-scrollbar-thumb {
   background: var(--md-border-strong);
-  border-radius: 4px;
+  border-radius: var(--md-radius-s);
 }
 `
 }
