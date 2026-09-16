@@ -16,13 +16,13 @@ export const name = 'markdown-to-image-service'
 
 export const usage = `## 使用
 
-\`mdimg\` 将 Markdown 转为图片。
+发送 \`mdimg\` 加一段 Markdown，得到一张图片；不带文本时会等你补发。
 
 ## 指令
 
 | 指令 | 说明 |
 | --- | --- |
-| \`mdimg [文本]\` | 将 Markdown 转为图片 |
+| \`mdimg [文本]\` | 把 Markdown 转成图片 |
 
 ## 服务
 
@@ -279,13 +279,13 @@ export async function apply(ctx: Context, config: Config) {
   ctx.plugin(MarkdownToImageService, config)
 
   ctx
-    .command('mdimg [markdownText:text]', '将 Markdown 文本转换为图片')
+    .command('mdimg [markdownText:text]', '把 Markdown 转成图片')
     .alias('markdownToImage')
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
-        await session.send('⚠️ 请输入要转换的 Markdown 文本：')
+        await session.send('💡 发送要转换的 Markdown 文本。')
         markdownText = await session.prompt()
-        if (!markdownText) return '⚠️ 输入超时。'
+        if (!markdownText) return '⏳ 没有等到文本，这次先作罢。'
       }
 
       try {
@@ -293,7 +293,7 @@ export async function apply(ctx: Context, config: Config) {
         return h.image(imageBuffer, `image/${config.rendering.imageFormat}`)
       } catch (e) {
         ctx.logger('markdown-to-image').warn(e)
-        return '❌ 图片生成失败，请检查日志。'
+        return '❌ 图片没能生成\n详细原因见后台日志，稍后再试一次。'
       }
     })
 }
