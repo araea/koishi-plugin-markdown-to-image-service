@@ -1,6 +1,6 @@
 # koishi-plugin-markdown-to-image-service
 
-把 Markdown 渲染为图片的 Koishi 服务，供其他插件调用
+Markdown 转图片 · 供其他插件调用的渲染服务
 
 ## 安装
 
