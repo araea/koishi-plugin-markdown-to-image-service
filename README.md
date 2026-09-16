@@ -24,4 +24,4 @@ ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>
 
 ## 许可证
 
-使用 [MIT](LICENSE-MIT) 许可证。
+可按 [Apache-2.0](LICENSE-APACHE) 或 [MIT](LICENSE-MIT) 使用。

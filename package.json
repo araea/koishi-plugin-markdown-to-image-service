@@ -19,7 +19,7 @@
       ]
     }
   },
-  "license": "MIT",
+  "license": "MIT OR Apache-2.0",
   "author": "Nawyjx <3373167460@qq.com>",
   "homepage": "https://www.npmjs.com/package/koishi-plugin-markdown-to-image-service?activeTab=readme",
   "repository": {
