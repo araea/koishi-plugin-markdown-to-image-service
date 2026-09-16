@@ -16,7 +16,7 @@ export const name = 'markdown-to-image-service'
 
 export const usage = `## 使用
 
-发送 \`mdimg\` 加一段 Markdown，得到一张图片；不带文本时会等你补发。
+发送「mdimg」加一段 Markdown，得到一张图片；不带文本时会等你补发。
 
 ## 指令
 
@@ -279,13 +279,13 @@ export async function apply(ctx: Context, config: Config) {
   ctx.plugin(MarkdownToImageService, config)
 
   ctx
-    .command('mdimg [markdownText:text]', '把 Markdown 转成图片')
+    .command('mdimg [markdownText:text]', 'Markdown 转图片')
     .alias('markdownToImage')
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
         await session.send('💡 发送要转换的 Markdown 文本，或发送「取消」。')
         markdownText = await session.prompt()
-        if (!markdownText) return '⏳ 没有等到文本，这次先作罢。'
+        if (!markdownText) return '⏳ 没有等到有效输入，这次先作罢。'
         if (markdownText.trim() === '取消') return '✅ 已取消。'
       }
 
