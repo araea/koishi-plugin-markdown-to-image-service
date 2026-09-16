@@ -25,7 +25,7 @@ function render(tex: string, displayMode: boolean, opts: MathOptions): string {
     return katex.renderToString(tex, {
       displayMode,
       throwOnError: opts.throwOnError ?? false,
-      errorColor: opts.errorColor ?? '#cc0000',
+      errorColor: opts.errorColor ?? 'var(--md-danger)',
       strict: (opts.strict ?? false) as any,
       macros: (opts.macros ?? {}) as any,
     })

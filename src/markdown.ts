@@ -26,6 +26,14 @@ export interface RenderResult {
 
 const MERMAID_LANGS = new Set(['mermaid', 'mmd'])
 
+/** 四类容器的类别名。图上没有 hover，颜色之外还得有一个文字通道。 */
+const KIND_LABEL: Record<string, string> = {
+  note: '说明',
+  tip: '提示',
+  warning: '注意',
+  danger: '危险',
+}
+
 /** 注册一个带可选标题的自定义容器（:::note / :::tip / :::warning / :::danger）。 */
 function useContainer(md: MarkdownItInstance, name: string): void {
   md.use(container, name, {
@@ -38,10 +46,13 @@ function useContainer(md: MarkdownItInstance, name: string): void {
       const match = info.match(new RegExp('^' + name + '(?:\\s+(.*))?$'))
       const title = match && match[1] ? match[1].trim() : ''
       if (tokens[idx].nesting === 1) {
+        const kind = KIND_LABEL[name]
+          ? `<div class="md-container-kind">${KIND_LABEL[name]}</div>\n`
+          : ''
         const heading = title
           ? `<div class="md-container-title">${md.utils.escapeHtml(title)}</div>\n`
           : ''
-        return `<div class="md-container ${name}">\n${heading}`
+        return `<div class="md-container ${name}">\n${kind}${heading}`
       }
       return '</div>\n'
     },

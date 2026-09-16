@@ -18,11 +18,9 @@ function vars(c: ReturnType<typeof scheme>, dark: boolean) {
   --md-bg: ${c.surface};
   --md-fg: ${c.onSurface};
   --md-fg-muted: ${c.onSurfaceVariant};
-  --md-fg-faint: ${c.outline};
   --md-border: ${c.outlineVariant};
   --md-border-strong: ${c.outline};
   --md-accent: ${c.primary};
-  --md-accent-weak: ${c.primaryContainer};
   --md-code-bg: ${c.surfaceContainerHigh};
   --md-code-block-bg: ${c.surfaceContainerLow};
   --md-blockquote-bg: ${c.surfaceContainerLow};
@@ -33,13 +31,15 @@ function vars(c: ReturnType<typeof scheme>, dark: boolean) {
   --md-mark-fg: ${c.onTertiaryContainer};
   --md-ins-bg: ${c.secondaryContainer};
   --md-danger: ${c.error};
+  /* 提示 / 注意两类容器没有 M3 的角色，取次色与第三色：
+     相邻的一对（说明与提示）共用蓝色系、只差彩度，警示那一类用对比色，与说明、危险都拉得开 */
+  --md-tip-border: ${c.secondary};
+  --md-warning-border: ${c.tertiary};
   --md-kbd-bg: ${c.surfaceContainerHigh};
   --md-kbd-border: ${c.outlineVariant};
-  --md-shadow: 0 0 0 1px ${c.outlineVariant};
   --md-radius-s: ${SHAPE.extraSmall}px;
   --md-radius-m: ${SHAPE.medium}px;
   --md-radius-l: ${SHAPE.large}px;
-  --md-radius-xl: ${SHAPE.extraLarge}px;
   --md-font: ${FONT_STACK};
   --md-font-mono: ${MONO_STACK};
   color-scheme: ${dark ? 'dark' : 'light'};`
@@ -131,11 +131,9 @@ body {
   margin: 0 0 16px;
 }
 
+/* 链接出图后没有 hover，下划线是颜色之外的第二条通道 */
 .markdown-body a {
   color: var(--md-accent);
-  text-decoration: none;
-}
-.markdown-body a:hover {
   text-decoration: underline;
 }
 
@@ -404,6 +402,12 @@ body {
   border-left: 0.3em solid var(--md-border-strong);
   background: var(--md-blockquote-bg);
 }
+.markdown-body .md-container .md-container-kind {
+  font-size: 0.875em;
+  font-weight: 600;
+  color: var(--md-fg-muted);
+  margin-bottom: 0.125em;
+}
 .markdown-body .md-container .md-container-title {
   font-weight: 600;
   margin-bottom: 0.25em;
@@ -412,10 +416,10 @@ body {
   border-left-color: var(--md-accent);
 }
 .markdown-body .md-container.tip {
-  border-left-color: #1a7f37;
+  border-left-color: var(--md-tip-border);
 }
 .markdown-body .md-container.warning {
-  border-left-color: #bf8700;
+  border-left-color: var(--md-warning-border);
 }
 .markdown-body .md-container.danger {
   border-left-color: var(--md-danger);
