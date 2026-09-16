@@ -283,9 +283,10 @@ export async function apply(ctx: Context, config: Config) {
     .alias('markdownToImage')
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
-        await session.send('💡 发送要转换的 Markdown 文本。')
+        await session.send('💡 发送要转换的 Markdown 文本，或发送「取消」。')
         markdownText = await session.prompt()
         if (!markdownText) return '⏳ 没有等到文本，这次先作罢。'
+        if (markdownText.trim() === '取消') return '✅ 已取消。'
       }
 
       try {
