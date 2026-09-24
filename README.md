@@ -1,6 +1,6 @@
-# koishi-plugin-markdown-to-image-service
+# Markdown 转图片服务
 
-Markdown 转图片 · 供其他插件调用的渲染服务
+Koishi 服务插件，将 Markdown 文本渲染为图片，并提供接口供其他插件调用。
 
 ## 安装
 
@@ -8,17 +8,15 @@ Markdown 转图片 · 供其他插件调用的渲染服务
 yarn add koishi-plugin-markdown-to-image-service
 ```
 
-在 Koishi 配置中启用，并提供 puppeteer 服务。
+在 Koishi 中启用，并安装 `puppeteer` 服务。
 
-## 指令
+## 使用
 
-| 指令 | 说明 |
-| --- | --- |
-| `mdimg [文本]` | Markdown 转图片 |
+指令：`mdimg [文本]`
 
-## 服务
+其他插件可调用：
 
-```typescript
+```ts
 ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>
 ```
 

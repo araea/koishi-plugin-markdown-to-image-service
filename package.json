@@ -1,6 +1,6 @@
 {
   "name": "koishi-plugin-markdown-to-image-service",
-  "description": "Koishi 插件 · Markdown 转图片。",
+  "description": "Koishi Markdown 渲染服务：将 Markdown 转为图片，并提供插件调用接口。",
   "version": "2.4.1",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
