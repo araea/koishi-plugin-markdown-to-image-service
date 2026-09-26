@@ -28,4 +28,4 @@ ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>
 
 有渲染图时只发图片，不再附带同内容的文字；图片生成失败时才退回文字。作品素材与感官测试的适用边界见 [设计系统](./DESIGN_SYSTEM.md)。
 
-本次更新：统一 M3 明暗主题、语法高亮和 Mermaid 颜色；保留原文与文字模式；可延长输入；发布共享设计令牌同步与检查工具。
+本次更新：mdimg 直接持有渲染器实例，不再触发 `property markdownToImage is not registered` 警告；新增导出 `MarkdownRenderer`。 主指令在 help 列表里补回描述；去掉「.显示」显示模式指令，有图只发图、出图失败才退回文字；多轮输入不再追加计时说明。
