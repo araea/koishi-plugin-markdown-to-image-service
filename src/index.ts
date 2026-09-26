@@ -1,5 +1,5 @@
 import { scheme, FONT_STACK } from './m3'
-import { usePresentation, promptInput } from './ux'
+import { present, promptInput } from './ux'
 import { Context, h, Schema, Service } from 'koishi'
 import {} from 'koishi-plugin-puppeteer'
 
@@ -123,15 +123,15 @@ declare module 'koishi' {
   }
 }
 
-export class MarkdownToImageService extends Service {
-  override readonly config: Config = {} as Config
-  private md: MarkdownItInstance
+/**
+ * 渲染器本体。它只是一个普通的类，不经服务注册：
+ * mdimg 指令直接持有一个实例，对外的 `markdownToImage` 服务也只是转交给它。
+ * （指令若去读 `ctx.markdownToImage`，而插件没有 inject 自己提供的服务，Koishi 会报 inject 警告。）
+ */
+export class MarkdownRenderer {
+  private md: MarkdownItInstance = createMarkdown()
 
-  constructor(ctx: Context, config: Config) {
-    super(ctx, 'markdownToImage', true)
-    this.config = config
-    this.md = createMarkdown()
-  }
+  constructor(private ctx: Context, readonly config: Config) {}
 
   private getTheme(): ThemeSettings {
     return resolveTheme(this.config.theme)
@@ -246,7 +246,7 @@ ${mermaidBlock}
       })
       return imageBuffer
     } catch (error) {
-      this.logger.error('Markdown 转图片失败:', error)
+      this.ctx.logger('markdown-to-image').error('Markdown 转图片失败:', error)
       throw error
     } finally {
       await page.close()
@@ -277,9 +277,35 @@ ${mermaidBlock}
   }
 }
 
+export class MarkdownToImageService extends Service {
+  static inject = ['puppeteer']
+  declare readonly config: Config
+  readonly renderer: MarkdownRenderer
+
+  constructor(ctx: Context, config: Config) {
+    super(ctx, 'markdownToImage', true)
+    this.config = config
+    this.renderer = new MarkdownRenderer(ctx, config)
+  }
+
+  /** 生成自包含、可离线渲染的完整 HTML。 */
+  buildHtml(body: string, hasMermaid: boolean): string {
+    return this.renderer.buildHtml(body, hasMermaid)
+  }
+
+  /** 将 Markdown 文本渲染为完整 HTML（供调试或二次处理）。 */
+  render(markdownText: string): string {
+    return this.renderer.render(markdownText)
+  }
+
+  convertToImage(markdownText: string, options?: Partial<RenderingConfig>): Promise<Buffer> {
+    return this.renderer.convertToImage(markdownText, options)
+  }
+}
+
 export async function apply(ctx: Context, config: Config) {
-  const presentation = usePresentation(ctx, 'mdimg')
   ctx.plugin(MarkdownToImageService, config)
+  const renderer = new MarkdownRenderer(ctx, config)
 
   ctx
     .command('mdimg [markdownText:text]', 'Markdown 转图片')
@@ -287,15 +313,14 @@ export async function apply(ctx: Context, config: Config) {
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
         await session.send('💡 发送要转换的 Markdown 文本，或发送「取消」。')
-        markdownText = await promptInput(session, '继续当前操作。')
+        markdownText = await promptInput(session)
         if (!markdownText) return '⏳ 没有等到有效输入，这次先作罢。'
         if (markdownText.trim() === '取消') return '✅ 已取消。'
       }
 
-      if (presentation.textOnly(session)) return h.text(markdownText)
       try {
-        const imageBuffer = await ctx.markdownToImage.convertToImage(markdownText)
-        return presentation.present(session, h.image(imageBuffer, `image/${config.rendering.imageFormat}`), h.text(markdownText))
+        const imageBuffer = await renderer.convertToImage(markdownText)
+        return present(h.image(imageBuffer, `image/${config.rendering.imageFormat}`), h.text(markdownText))
       } catch (e) {
         ctx.logger('markdown-to-image').warn(e)
         return h.text(`图片暂时无法生成，可稍后重试。\n${markdownText}`)

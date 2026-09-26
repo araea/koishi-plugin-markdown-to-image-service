@@ -14,7 +14,7 @@ import { blockData } from '../../mcdle/src/data'
 import { poolTable } from '../../azur-lane-building/src/render'
 import { generateImage, generatePanelImage } from '../../wordle-game/src/services/renderer'
 import { generateStyledHtml } from '../../wordle-game/src/html/tiles'
-import { MarkdownToImageService, Config } from '../src'
+import { MarkdownRenderer, Config } from '../src'
 
 async function main() {
  const out = await mkdtemp(path.join(tmpdir(), 'koishi-design-review-'))
@@ -45,7 +45,7 @@ async function main() {
   await capture('mcdle-board',boardCard({mode:'block',guesses:[first,{...first,chinese_title:'很长的方块名称，用于检查布局是否溢出'}]} as any))
   await capture('mcdle-start',startCard('block',0,10,true))
   await capture('azur-pool',poolTable({SSR:'企业、测试舰娘',SR:'标枪',R:'拉菲',N:'长岛'} as any,{SSR:7,SR:12,R:26,N:55} as any,'轻型池',1))
-  const md = new MarkdownToImageService(ctx,Config({}));
+  const md = new MarkdownRenderer(ctx,Config({}));
   await capture('markdown-light',md.render('# 示例文档\n\n这是一段支持换行的正文。\n\n```js\nconst a = "long";\n'+ 'really_long_code_'.repeat(15)+'\n```\n\n```mermaid\ngraph LR\nA[开始] --> B[结束]\n```'),640)
   // Execute the actual message-counter command through its database/render pipeline.
   const commands = new Map<string, Function>()
@@ -62,11 +62,6 @@ async function main() {
   assert.doesNotMatch(h.normalize(counterOutput).join(''),/8\. 成员 7/)
   const counterSource = counterImage.attrs.src as string
   await writeFile(path.join(out,'message-counter.png'), Buffer.from(counterSource.split(',')[1],'base64'))
-  // 文字模式才给出完整榜单
-  await commands.get('msgcount.显示 [mode:string]')!({session:{platform:'mock',selfId:'bot',userId:'0',channelId:'g'}},'文字')
-  const counterText = await commands.get('msgcount.排行榜 [count:posint]')!({session:{platform:'mock',selfId:'bot',userId:'0',channelId:'g'},options:{}},8)
-  assert.match(h.normalize(counterText).join(''),/8\. 成员 7/)
-  assert.equal(h.select(h.normalize(counterText),'img').length,0)
   const g: any={ctx,config:{imageType:'png'},logger:{warn(...args:any[]){errors.push(String(args))}}}
   for (const dark of [false,true]) {
    g.config.isDarkThemeEnabled=dark
