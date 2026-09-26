@@ -13,7 +13,7 @@ import {
  * 取值全部来自 m3.ts：`baseline()` 铺开色相 258 的 `--md-sys-color-*` 角色色、
  * 形状 / 字阶 / 高度的变量与排版重置；圆角走 `--md-sys-shape-corner-*`，
  * 字号与强调字重走 `TYPE` 与 `EMPHASIZED_WEIGHT`，高度走 `ELEVATION`。
- * 代码高亮仍交给 highlight.js 的主题文件，那部分是语法着色，不归设计系统管。
+ * 代码与图表同样使用 M3 语义角色。
  */
 
 /** 文档类的主色取中性蓝：长文里主色只出现在链接和强调上，不该抢戏。 */
@@ -28,6 +28,13 @@ const DARK = scheme(HUE, true)
 export function baseCss(): string {
   return `
 ${baseline(LIGHT)}
+.hljs{color:var(--md-sys-color-on-surface);background:var(--md-sys-color-surface-container)}
+.hljs-keyword,.hljs-selector-tag,.hljs-built_in{color:var(--md-sys-color-primary);font-weight:600}
+.hljs-string,.hljs-regexp,.hljs-attribute{color:var(--md-sys-color-tertiary)}
+.hljs-number,.hljs-literal,.hljs-title{color:var(--md-sys-color-secondary)}
+.hljs-comment,.hljs-quote{color:var(--md-sys-color-on-surface-variant);font-style:italic}
+.markdown-body pre,.markdown-body pre code{white-space:pre-wrap!important;overflow-wrap:anywhere}
+
 /* 暗色只换角色取值；明色由 baseline 的 :root 兜底，与 data-theme="light" 同值 */
 :root { color-scheme: light; }
 html[data-theme="dark"] {${colorVars(DARK)};color-scheme:dark}

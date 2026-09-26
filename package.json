@@ -1,13 +1,16 @@
 {
   "name": "koishi-plugin-markdown-to-image-service",
   "description": "Koishi Markdown 渲染服务：将 Markdown 转为图片，并提供插件调用接口。",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "lib",
     "LICENSE-APACHE",
-    "LICENSE-MIT"
+    "LICENSE-MIT",
+    "DESIGN_SYSTEM.md",
+    "CHANGELOG.md",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "koishi": {
     "service": {
@@ -45,7 +48,11 @@
   "devDependencies": {
     "koishi-plugin-puppeteer": "^3.9.0",
     "typescript": "^5.9.3",
-    "yml-register": "^1.2.5"
+    "yml-register": "^1.2.5",
+    "tsx": "^4.23.15",
+    "@material/material-color-utilities": "0.4.0",
+    "esbuild": "0.23.1",
+    "puppeteer-core": "^22.15.0"
   },
   "dependencies": {
     "highlight.js": "^11.12.0",
@@ -62,5 +69,11 @@
     "markdown-it-sup": "^2.0.0",
     "markdown-it-task-lists": "^2.1.1",
     "mermaid": "^11.17.2"
+  },
+  "scripts": {
+    "check:design": "node scripts/check-design-system.mjs",
+    "test": "tsx --test test/*.test.ts",
+    "sync:design": "node scripts/sync-design-system.mjs",
+    "check:workspace-design": "node scripts/sync-design-system.mjs --check"
   }
 }

@@ -1,10 +1,12 @@
+import { scheme, FONT_STACK } from './m3'
+import { usePresentation, promptInput } from './ux'
 import { Context, h, Schema, Service } from 'koishi'
 import {} from 'koishi-plugin-puppeteer'
 
 import { createMarkdown, renderMarkdown } from './markdown'
 
 type MarkdownItInstance = import('markdown-it').MarkdownIt
-import { katexCss, highlightCss, mermaidJs } from './assets'
+import { katexCss, mermaidJs } from './assets'
 import { baseCss } from './styles'
 import { resolveTheme, ThemeConfig, ThemeSettings, themePresets } from './theme'
 
@@ -89,9 +91,9 @@ export const Config: Schema<Config> = Schema.intersect([
     theme: Schema.union([
       Schema.object({
         mode: Schema.const('preset').default('preset'),
-        preset: Schema.union(Object.keys(themePresets))
-          .default('github-light')
-          .description('选择一个开箱即用的主题预设。'),
+        preset: Schema.string()
+          .default('m3-light')
+          .description('M3 明色 m3-light 或暗色 m3-dark；旧主题名自动迁移。'),
       }).description('预设主题'),
       Schema.object({
         mode: Schema.const('custom'),
@@ -102,16 +104,16 @@ export const Config: Schema<Config> = Schema.intersect([
           codeTheme: Schema.string()
             .default('github-dark')
             .description(
-              '代码高亮主题，请使用 highlight.js 主题名（如 github、github-dark、atom-one-dark、monokai）。'
+              '兼容旧配置；语法颜色始终跟随 M3 页面主题。'
             ),
           mermaidTheme: Schema.union(MERMAID_THEMES)
             .default('dark')
-            .description('Mermaid 图表主题。'),
+            .description('兼容旧配置；图表颜色始终跟随 M3 页面主题。'),
         }),
       }).description('自定义主题'),
     ])
       .description('主题配置')
-      .default({ mode: 'preset', preset: 'github-light' }),
+      .default({ mode: 'preset', preset: 'm3-light' }),
   }),
 ]) satisfies Schema<Config>
 
@@ -121,7 +123,7 @@ declare module 'koishi' {
   }
 }
 
-class MarkdownToImageService extends Service {
+export class MarkdownToImageService extends Service {
   override readonly config: Config = {} as Config
   private md: MarkdownItInstance
 
@@ -142,7 +144,6 @@ class MarkdownToImageService extends Service {
 
     const styles = [
       `<style>${katexCss()}</style>`,
-      `<style>${highlightCss(theme.codeTheme)}</style>`,
       `<style>${baseCss()}</style>`,
     ].join('\n')
 
@@ -151,7 +152,8 @@ class MarkdownToImageService extends Service {
 <script>
 window.mermaid.initialize({
   startOnLoad: false,
-  theme: ${JSON.stringify(theme.mermaidTheme)},
+  theme: 'base',
+  themeVariables: ${JSON.stringify((() => { const c = scheme(258, theme.pageTheme === 'dark'); return { darkMode:theme.pageTheme==='dark', fontFamily:FONT_STACK, primaryColor:c.primaryContainer, primaryTextColor:c.onPrimaryContainer, primaryBorderColor:c.outline, lineColor:c.onSurfaceVariant, secondaryColor:c.secondaryContainer, tertiaryColor:c.tertiaryContainer, background:c.surface, mainBkg:c.surfaceContainer, nodeTextColor:c.onSurface, textColor:c.onSurface, edgeLabelBackground:c.surface }; })())},
   securityLevel: 'loose',
   flowchart: { useMaxWidth: true },
 });
@@ -276,6 +278,7 @@ ${mermaidBlock}
 }
 
 export async function apply(ctx: Context, config: Config) {
+  const presentation = usePresentation(ctx, 'mdimg')
   ctx.plugin(MarkdownToImageService, config)
 
   ctx
@@ -284,17 +287,18 @@ export async function apply(ctx: Context, config: Config) {
     .action(async ({ session }, markdownText) => {
       if (!markdownText) {
         await session.send('💡 发送要转换的 Markdown 文本，或发送「取消」。')
-        markdownText = await session.prompt()
+        markdownText = await promptInput(session, '继续当前操作。')
         if (!markdownText) return '⏳ 没有等到有效输入，这次先作罢。'
         if (markdownText.trim() === '取消') return '✅ 已取消。'
       }
 
+      if (presentation.textOnly(session)) return h.text(markdownText)
       try {
         const imageBuffer = await ctx.markdownToImage.convertToImage(markdownText)
-        return h.image(imageBuffer, `image/${config.rendering.imageFormat}`)
+        return presentation.present(session, h.image(imageBuffer, `image/${config.rendering.imageFormat}`), h.text(markdownText))
       } catch (e) {
         ctx.logger('markdown-to-image').warn(e)
-        return '❌ 图片没能生成\n详细原因见后台日志，稍后再试一次。'
+        return h.text(`图片暂时无法生成，可稍后重试。\n${markdownText}`)
       }
     })
 }
