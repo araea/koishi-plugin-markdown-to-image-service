@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import vm from 'node:vm'
 import { scheme, contrast, MEDAL, onColor, clientColorScript, harmonize } from '../src/m3'
-import { usePresentation, directInputConflict, registerDirectInput, withoutImages, promptInput } from '../src/ux'
+import { usePresentation, directInputConflict, registerDirectInput, withoutImages, imagesOnly, choosePresentation, imageText, promptInput } from '../src/ux'
 import { createPayments } from '../src/payments'
 import { h } from 'koishi'
 
@@ -29,18 +29,30 @@ function context() {
   const ctx: any = { root: {}, command(name: string) { return { action(fn: Function) { commands.set(name, fn) } } }, on(_:string, fn:Function){disposers.push(fn)} }
   return {ctx,commands,disposers}
 }
-test('presentation preference is shared across plugins but isolated per bot; full text survives', () => {
+test('presentation preference is shared per bot, isolated per user; 图文只发图，文字模式发全文', () => {
   const {ctx,commands} = context()
   const one = usePresentation(ctx,'a'), two = usePresentation(ctx,'b')
   const session: any = {platform:'mock',selfId:'bot',userId:'u'}
   const text = '1. A\n2. B\n3. C\n4. D\n5. E\n6. F'
-  const out = one.present(session,h.image('https://example.com/image.png'),h.text(text))
-  assert.match(h.normalize(out).join(''), /6\. F/)
+  // 图文模式：只给图片，不再附带等价文字
+  const image = h.normalize(one.present(session,h.image('https://example.com/image.png'),h.text(text)))
+  assert.equal(image.length,1)
+  assert.equal(image[0].type,'img')
+  assert.doesNotMatch(image.join(''),/6\. F/)
   commands.get('a.显示 [mode:string]')!({session},'文字')
   assert.equal(two.textOnly(session),true)
   assert.equal(two.textOnly({...session,selfId:'other'}),false)
   assert.equal(h.normalize(two.present(session,h.image('x'),h.text(text))).join(''),text)
   assert.equal(withoutImages(h('p',{},[h.image('x'),h.text(text)])).join(''),`<p>${text}</p>`)
+})
+test('图片等价文字在图文模式被丢掉、在文字模式被展开', () => {
+  const content = h('p',{},['已撤销，挑战继续\n',h('p',{},[h.image('x'),imageText('棋盘：轮到红方')])])
+  const image = imagesOnly(content).join('')
+  const text = withoutImages(content).join('')
+  assert.match(image,/已撤销/); assert.match(image,/<img/); assert.doesNotMatch(image,/棋盘：轮到红方/)
+  assert.match(text,/棋盘：轮到红方/); assert.match(text,/已撤销/); assert.doesNotMatch(text,/<img/)
+  assert.equal(choosePresentation(content,false).join(''),image)
+  assert.equal(choosePresentation(content,true).join(''),text)
 })
 test('conflicting active games do not consume ambiguous bare input', async () => {
   const {ctx,disposers} = context(); const messages: string[] = []

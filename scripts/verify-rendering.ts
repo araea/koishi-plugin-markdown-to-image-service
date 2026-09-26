@@ -58,9 +58,15 @@ async function main() {
   const counterOutput = await commands.get('msgcount.排行榜 [count:posint]')!({session:{platform:'mock',selfId:'bot',userId:'0',channelId:'g'},options:{}},8)
   const counterImage = h.select(h.normalize(counterOutput),'img')[0]
   assert.ok(counterImage,'message-counter must return an actual chart, not silently fall back to text')
-  assert.match(h.normalize(counterOutput).join(''),/8\. 成员 7/)
+  // 图文模式只发图：不再附带整段文字榜单
+  assert.doesNotMatch(h.normalize(counterOutput).join(''),/8\. 成员 7/)
   const counterSource = counterImage.attrs.src as string
   await writeFile(path.join(out,'message-counter.png'), Buffer.from(counterSource.split(',')[1],'base64'))
+  // 文字模式才给出完整榜单
+  await commands.get('msgcount.显示 [mode:string]')!({session:{platform:'mock',selfId:'bot',userId:'0',channelId:'g'}},'文字')
+  const counterText = await commands.get('msgcount.排行榜 [count:posint]')!({session:{platform:'mock',selfId:'bot',userId:'0',channelId:'g'},options:{}},8)
+  assert.match(h.normalize(counterText).join(''),/8\. 成员 7/)
+  assert.equal(h.select(h.normalize(counterText),'img').length,0)
   const g: any={ctx,config:{imageType:'png'},logger:{warn(...args:any[]){errors.push(String(args))}}}
   for (const dark of [false,true]) {
    g.config.isDarkThemeEnabled=dark
