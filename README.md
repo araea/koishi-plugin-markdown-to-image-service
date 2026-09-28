@@ -1,6 +1,6 @@
 # Markdown 转图片服务
 
-把 Markdown 文本渲染成图片的 Koishi 插件，支持 KaTeX 公式与 Mermaid 图表
+Koishi 插件：把 Markdown 文本渲染成图片，支持 KaTeX 公式与 Mermaid 图表
 
 [![GitHub](https://img.shields.io/badge/GitHub-仓库-blue)](https://github.com/araea/koishi-plugin-markdown-to-image-service) [![npm](https://img.shields.io/badge/npm-包-red)](https://www.npmjs.com/package/koishi-plugin-markdown-to-image-service)
 
