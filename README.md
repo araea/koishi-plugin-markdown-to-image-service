@@ -1,6 +1,6 @@
 # Markdown 转图片服务
 
-Koishi 服务插件，将 Markdown 文本渲染为图片，并提供接口供其他插件调用。
+Koishi 插件 · Markdown 转图片服务
 
 ## 安装
 
