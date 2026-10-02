@@ -175,30 +175,64 @@ body {
   margin-top: 0.25em;
 }
 
-/* 任务列表 */
+/* 项目符号取主色、序号再加粗一档：列表层级靠标记就能扫出来 */
+.markdown-body li::marker {
+  color: var(--md-sys-color-primary);
+  font-weight: ${EMPHASIZED_WEIGHT.label};
+}
+
+/*
+ * 任务列表：缩进与普通列表一致，复选框落在原本放项目符号的位置。
+ * 浏览器自带的蓝色复选框跟主题没有关系，出图后也无法点击，这里画成 M3 的复选框：
+ * 20px 圆角方框，勾选后实心主色加对勾。
+ */
 .markdown-body ul.contains-task-list {
   list-style: none;
-  padding-left: 0.25em;
 }
 .markdown-body .task-list-item {
+  position: relative;
   list-style-type: none;
 }
 .markdown-body .task-list-item input[type="checkbox"] {
-  margin: 0 0.5em 0.15em -1.4em;
-  vertical-align: middle;
-  appearance: auto;
+  position: absolute;
+  left: -1.9em;
+  top: 0.2em; /* 行高 1.65：(26.4 - 20) / 2 ≈ 0.2em，复选框与首行文字垂直居中 */
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  appearance: none;
+  box-sizing: border-box;
+  border: 2px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  background: transparent;
+}
+.markdown-body .task-list-item input[type="checkbox"]:checked {
+  border-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 6.8' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* ---------- 引用 ---------- */
+/* 竖条是独立的圆头条：border-left 配圆角会弯成一道月牙，边缘也不干净 */
 .markdown-body blockquote {
+  position: relative;
   margin: 0 0 16px;
-  padding: 0 1em;
+  padding: 0.25em 1em 0.25em 1.5em;
   color: var(--md-sys-color-on-surface-variant);
-  border-left: 0.25em solid var(--md-sys-color-primary);
   background: var(--md-sys-color-surface-container-low);
-  border-radius: var(--md-sys-shape-corner-medium);
-  padding-top: 0.25em;
-  padding-bottom: 0.25em;
+  border-radius: var(--md-sys-shape-corner-large);
+}
+.markdown-body blockquote::before {
+  content: "";
+  position: absolute;
+  left: 0.5em;
+  top: 0.75em;
+  bottom: 0.75em;
+  width: 4px;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: var(--md-sys-color-primary);
 }
 .markdown-body blockquote > :first-child {
   margin-top: 0.5em;
@@ -271,27 +305,34 @@ body {
 }
 
 /* ---------- 表格 ---------- */
+/* 表格：不画竖线、不做斑马纹；表头是一条容器色，行与行之间一道细分隔线，四角圆角 */
 .markdown-body table {
   border-spacing: 0;
-  border-collapse: collapse;
+  border-collapse: separate;
   width: 100%;
   margin: 0 0 16px;
   font-size: ${TYPE.bodyLarge.size}px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-large);
+  overflow: hidden;
 }
 .markdown-body table th,
 .markdown-body table td {
-  padding: 6px 13px;
-  border: 1px solid var(--md-sys-color-outline-variant);
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
-.markdown-body table tr {
-  background-color: var(--md-sys-color-surface);
+.markdown-body table tr:last-child td {
+  border-bottom: 0;
 }
-.markdown-body table tr:nth-child(2n) {
-  background-color: var(--md-sys-color-surface-container-low);
-}
+/*
+ * 相邻单元格各画各的底色，在小数像素（deviceScaleFactor 1.5 / 2）上会漏出一丝竖缝：
+ * 每格向右多画 1px 同色的影子把缝盖住（最后一格多出的部分被表格圆角裁掉）。
+ */
 .markdown-body table th {
   font-weight: ${EMPHASIZED_WEIGHT.title};
   background-color: var(--md-sys-color-surface-container-high);
+  box-shadow: 1px 0 0 0 var(--md-sys-color-surface-container-high);
 }
 
 /* ---------- 图片 ---------- */

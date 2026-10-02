@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-markdown-to-image-service",
   "description": "Koishi 插件：把 Markdown 文本渲染成图片，支持 KaTeX 公式与 Mermaid 图表。",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
