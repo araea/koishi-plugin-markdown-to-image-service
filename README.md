@@ -37,7 +37,7 @@ ctx.markdownToImage.convertToImage(markdownText: string): Promise<Buffer>
 | `theme.preset` | string | `m3-light` | 预设主题，可选 `m3-light` 或 `m3-dark` |
 | `theme.custom.pageTheme` | `light` / `dark` | `dark` | 自定义主题的页面主题 |
 | `theme.custom.codeTheme` | string | `github-dark` | 语法高亮配色 |
-| `theme.custom.mermaidTheme` | string | `dark` | 兼容旧配置；图表颜色始终跟随 M3 页面主题 |
+| `theme.custom.mermaidTheme` | string | `dark` | 图表颜色始终跟随 M3 页面主题 |
 
 ## 限制 / 风险
 
